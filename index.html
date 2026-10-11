@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#173f2a" />
+  <meta name="description"
+    content="KrishiVed — satellite-inspired field insights, soil validation, and farmer-friendly advisory for precision agriculture in India." />
+  <title>कृषिवेद | KrishiVed — Precision Agriculture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%23173f2a%27/%3E%3Ctext x=%2732%27 y=%2746%27 font-size=%2740%27 text-anchor=%27middle%27 fill=%27%23b9e56b%27%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Top Demo Ribbon -->
+  <div class="demo-ribbon" data-i18n="ribbon">
+    <span class="pulse"></span> HACKATHON MVP · DEMO / ILLUSTRATIVE DATA · SATELLITE + AI + FIELD KNOWLEDGE
+  </div>
+
+  <!-- Main Site Header -->
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="KrishiVed home">
+      <span class="brand-mark">कृ</span>
+      <span>
+        <strong>कृषिवेद</strong>
+        <small data-i18n="brandSub">KRISHIVED · FIELD INTELLIGENCE</small>
+      </span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <nav id="mainNav" aria-label="Main navigation">
+      <a href="#home" data-i18n="navHome">Home</a>
+      <a href="#problem" data-i18n="navProblem">Challenge</a>
+      <a href="#solution" data-i18n="navSolution">Solution</a>
+      <a href="#how" data-i18n="navHow">How it works</a>
+      <a href="#dashboard" data-i18n="navDashboard">Dashboard</a>
+      <a href="#report" data-i18n="navReport">Field report</a>
+      <a href="#assistant" data-i18n="navAssistant">AI Farmer Friend</a>
+      <a href="#hub" data-i18n="navHub">Natural Fertilizer Hub</a>
+      <a href="#about" data-i18n="navAbout">About</a>
+    </nav>
+    <div class="header-actions">
+      <label class="language-picker" aria-label="Choose language">
+        <span class="globe-icon">🌐</span>
+        <select id="languageSelect" title="Select Indian Language">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी (Hindi)</option>
+          <option value="ur">اردو (Urdu)</option>
+          <option value="mr">मराठी (Marathi)</option>
+          <option value="bn">বাংলা (Bengali)</option>
+          <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+          <option value="gu">ગુજરાતી (Gujarati)</option>
+          <option value="ta">தமிழ் (Tamil)</option>
+          <option value="te">తెలుగు (Telugu)</option>
+          <option value="kn">ಕನ್ನಡ (Kannada)</option>
+          <option value="ml">മലയാളം (Malayalam)</option>
+          <option value="or">ଓଡ଼ିଆ (Odia)</option>
+          <option value="as">অসমীয়া (Assamese)</option>
+          <option value="mai">मैथिली (Maithili)</option>
+          <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+          <option value="ks">کٲشُر (Kashmiri)</option>
+          <option value="ne">नेपाली (Nepali)</option>
+          <option value="kok">कोंकणी (Konkani)</option>
+          <option value="sd">سنڌي (Sindhi)</option>
+          <option value="doi">डोगरी (Dogri)</option>
+          <option value="brx">बड़ो (Bodo)</option>
+          <option value="mni">মৈতৈলোন্ (Manipuri)</option>
+          <option value="sa">संस्कृतम् (Sanskrit)</option>
+        </select>
+      </label>
+      <a class="button button-dark button-small" href="#login" data-i18n="signIn">Farmer login ↗</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- SCENE 1: HERO SECTION -->
+    <section class="hero section-shell" id="home">
+      <div class="hero-copy">
+        <div class="eyebrow">
+          <span class="eyebrow-line"></span>
+          <span data-i18n="heroEye">SATELLITE + AI + FIELD KNOWLEDGE</span>
+        </div>
+        <h1 data-i18n="heroTitle">See the field.<br><em>Understand the need.</em><br>Act at the right time.</h1>
+        <p class="hero-sub" data-i18n="heroSub">
+          Location-specific crop insights that help farmers know where to look, what to validate, and when to act.
+        </p>
+        <div class="hero-actions">
+          <a href="#dashboard" class="button button-lime" data-i18n="exploreDashboard">Explore demo dashboard
+            <span>↗</span></a>
+          <a href="#how" class="text-link" data-i18n="seeHow">See how it works <span>→</span></a>
+        </div>
+        <div class="hero-proof">
+          <div class="avatar-stack"><span>क</span><span>🌾</span><span>◎</span></div>
+          <div>
+            <strong data-i18n="heroProofTitle">One field. Different needs.</strong>
+            <small data-i18n="heroProofSub">Built around local context, not guesswork.</small>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="visual-top">
+          <span class="live-dot"></span>
+          <span data-i18n="heroVisualTop">FIELD OVERVIEW</span>
+          <span class="visual-demo" data-i18n="heroVisualDemo">ILLUSTRATIVE</span>
+        </div>
+        <div class="field-scene">
+          <div class="field-sun">☼</div>
+          <div class="field-grid" aria-label="Illustrative field zones">
+            <button class="map-zone zone-a" data-zone="A" aria-label="Select zone A">A</button>
+            <button class="map-zone zone-b" data-zone="B" aria-label="Select zone B">B</button>
+            <button class="map-zone zone-c selected" data-zone="C" aria-label="Select zone C"
+              aria-pressed="true">C</button>
+            <button class="map-zone zone-d" data-zone="D" aria-label="Select zone D">D</button>
+            <button class="map-zone zone-e" data-zone="E" aria-label="Select zone E">E</button>
+            <button class="map-zone zone-f" data-zone="F" aria-label="Select zone F">F</button>
+          </div>
+          <div class="map-coordinate">
+            <span>⌖</span> <b id="heroCoords">28.6692° N, 77.4538° E</b>
+          </div>
+          <div class="map-scale">N ↑ <span>0 ━━━━━ 100 m</span></div>
+        </div>
+        <div class="field-popover">
+          <span class="popover-icon">⌁</span>
+          <div>
+            <small id="selectedZoneLabel">ZONE C · NUTRIENT-STRESS CLUE</small>
+            <strong id="selectedZoneText">Potential nutrient-stress clue</strong>
+            <p id="selectedZoneHint">Soil testing recommended before input changes</p>
+          </div>
+          <a href="#report" class="popover-arrow" title="Inspect in field report">↗</a>
+        </div>
+        <div class="visual-foot">
+          <span data-i18n="heroFootVigour">◉ Crop vigour pattern</span>
+          <span data-i18n="heroFootMoisture">◌ Surface moisture context</span>
+        </div>
+      </div>
+      <div class="hero-bottom-note">
+        <span>01 / 08</span>
+        <span data-i18n="heroDeckTag">PRECISION AGRICULTURE FOR INDIA</span>
+        <span data-i18n="heroDeckScroll">↓ SCROLL TO EXPLORE</span>
+      </div>
+    </section>
+
+    <!-- TRUST STRIP -->
+    <section class="trust-strip">
+      <div>
+        <span class="strip-icon">◎</span>
+        <span>
+          <strong data-i18n="trustLookTitle">Know where to look</strong>
+          <small data-i18n="trustLookSub">Identify zones for closer field checks</small>
+        </span>
+      </div>
+      <div>
+        <span class="strip-icon">◷</span>
+        <span>
+          <strong data-i18n="trustActTitle">Know when to act</strong>
+          <small data-i18n="trustActSub">Bring weather and crop stage together</small>
+        </span>
+      </div>
+      <div>
+        <span class="strip-icon">✳</span>
+        <span>
+          <strong data-i18n="trustInputTitle">Use inputs more precisely</strong>
+          <small data-i18n="trustInputSub">Validate before choosing a treatment</small>
+        </span>
+      </div>
+    </section>
+
+    <!-- SCENE 2: THE PROBLEM / CHALLENGE -->
+    <section class="section section-shell problem-section" id="problem">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow" data-i18n="probEye">THE CHALLENGE</div>
+          <h2 data-i18n="probTitle">One farm is not<br><em>one uniform field.</em></h2>
+        </div>
+        <p data-i18n="probDesc">
+          Soil moisture, crop vigour, and nutrient needs can vary within a single plot. Blanket decisions can miss the
+          zones that need attention most.
+        </p>
+      </div>
+      <div class="problem-grid">
+        <article class="problem-card">
+          <div class="card-symbol symbol-sand">⌁</div>
+          <h3 data-i18n="p1Title">Signals get missed</h3>
+          <p data-i18n="p1Desc">Small changes in crop vigour and moisture are difficult to notice when the whole field
+            is evaluated as a single unit.</p>
+          <span class="card-index">01</span>
+        </article>
+        <article class="problem-card">
+          <div class="card-symbol symbol-pink">◌</div>
+          <h3 data-i18n="p2Title">Inputs can be mistimed</h3>
+          <p data-i18n="p2Desc">Weather fluctuations, crop stage, and moisture deficits all influence whether irrigation
+            or fertilizer will help or harm.</p>
+          <span class="card-index">02</span>
+        </article>
+        <article class="problem-card">
+          <div class="card-symbol symbol-green">⌖</div>
+          <h3 data-i18n="p3Title">Advice needs validation</h3>
+          <p data-i18n="p3Desc">Satellite maps provide spatial clues; targeted soil testing and agronomy are essential
+            to confirm actual nutrient requirements.</p>
+          <span class="card-index">03</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- SCENE 3: THE SOLUTION & FARMER BENEFITS -->
+    <section class="section section-shell solution-section" id="solution">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow" data-i18n="solEye">THE SOLUTION · PRECISION AGRICULTURE</div>
+          <h2 data-i18n="solTitle">From space data to<br><em>smarter decisions.</em></h2>
+        </div>
+        <p data-i18n="solDesc">
+          KrishiVed combines satellite observations, weather context, and AI pattern detection with local soil testing
+          and agronomy—delivering clear guidance in the farmer's language.
+        </p>
+      </div>
+      <div class="solution-grid">
+        <article class="benefit-card">
+          <div class="benefit-icon">◎</div>
+          <div>
+            <h3 data-i18n="ben1Title">Right input, right place</h3>
+            <p data-i18n="ben1Desc">Focus fertilizer and scouting only where needed instead of blanket broadcast
+              applications across the entire farm.</p>
+          </div>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon">◌</div>
+          <div>
+            <h3 data-i18n="ben2Title">Smarter water use</h3>
+            <p data-i18n="ben2Desc">Prioritise irrigation timing using moisture patterns and rainfall forecasts,
+              avoiding water stress and root waterlogging.</p>
+          </div>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon">!</div>
+          <div>
+            <h3 data-i18n="ben3Title">Earlier crop-stress alerts</h3>
+            <p data-i18n="ben3Desc">Spot unusual canopy patterns 5–7 days sooner than naked eye scouting to inspect
+              problems before yield loss occurs.</p>
+          </div>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon">₹</div>
+          <div>
+            <h3 data-i18n="ben4Title">Lower unnecessary spending</h3>
+            <p data-i18n="ben4Desc">Avoid over-spending on ineffective chemical inputs by confirming true soil nutrient
+              needs through lab validation.</p>
+          </div>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon">▤</div>
+          <div>
+            <h3 data-i18n="ben5Title">Better field records</h3>
+            <p data-i18n="ben5Desc">Track crop development and compare zone health across multiple seasons to build
+              institutional field knowledge.</p>
+          </div>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon">🗣</div>
+          <div>
+            <h3 data-i18n="ben6Title">Local-language access</h3>
+            <p data-i18n="ben6Desc">Share simple, actionable advisories through mobile app, SMS or voice in Hindi, Urdu,
+              and regional languages.</p>
+          </div>
+        </article>
+      </div>
+      <div class="solution-banner">
+        <span class="solution-tag" data-i18n="solTag">ONE FARM ≠ ONE UNIFORM FIELD</span>
+        <p data-i18n="solFooterNote">
+          Designed to complement farmers' lived experience, soil testing, and local agricultural extension officers.
+        </p>
+      </div>
+    </section>
+
+    <!-- SCENE 4: HOW IT WORKS (OBSERVE → ANALYSE → VALIDATE → ADVISE) -->
+    <section class="section process-section" id="how">
+      <div class="section-shell">
+        <div class="section-heading light-heading">
+          <div>
+            <div class="eyebrow" data-i18n="howEye">FROM SPACE TO SOIL</div>
+            <h2 data-i18n="howTitle">Four steps.<br><em>One clearer decision.</em></h2>
+          </div>
+          <p data-i18n="howDesc">
+            A simple, scientifically grounded pipeline connecting satellite observations with field validation and
+            practical farmer guidance.
+          </p>
+        </div>
+        <div class="process-track">
+          <article class="process-step">
+            <div class="step-top"><span>01</span><span class="step-icon">◉</span></div>
+            <h3 data-i18n="step1Title">OBSERVE</h3>
+            <p data-i18n="step1Desc">Satellite imagery + weather + crop calendar. Track vegetation indices, surface
+              moisture trends, and field changes.</p>
+            <small data-i18n="step1Meta">Vegetation · Surface moisture · Field changes</small>
+          </article>
+          <span class="track-arrow">→</span>
+          <article class="process-step">
+            <div class="step-top"><span>02</span><span class="step-icon">✳</span></div>
+            <h3 data-i18n="step2Title">ANALYSE</h3>
+            <p data-i18n="step2Desc">AI models + field history. Create illustrative zone heatmaps and flag unusual
+              growth patterns for review.</p>
+            <small data-i18n="step2Meta">AI models · Anomaly detection · Priority flags</small>
+          </article>
+          <span class="track-arrow">→</span>
+          <article class="process-step">
+            <div class="step-top"><span>03</span><span class="step-icon">⌖</span></div>
+            <h3 data-i18n="step3Title">VALIDATE</h3>
+            <p data-i18n="step3Desc">Soil test + local agronomy + field inspection. Confirm true nutrient and moisture
+              needs before recommending any dosage.</p>
+            <small data-i18n="step3Meta">Targeted scouting · Soil test · Agronomic check</small>
+          </article>
+          <span class="track-arrow">→</span>
+          <article class="process-step">
+            <div class="step-top"><span>04</span><span class="step-icon">↗</span></div>
+            <h3 data-i18n="step4Title">ADVISE</h3>
+            <p data-i18n="step4Desc">Farmer-friendly, location-specific actions delivered via mobile app, SMS, or
+              local-language advisory voice.</p>
+            <small data-i18n="step4Meta">Actionable step · Right timing · Local language</small>
+          </article>
+        </div>
+        <div class="science-note">
+          <span class="science-icon">ⓘ</span>
+          <p data-i18n="scienceNote">
+            <strong>Scientific note:</strong> Satellite observations detect patterns and nutrient-stress clues. They do
+            <u>not</u> directly measure exact N–P–K values. Exact nutrient requirements must always be confirmed through
+            certified laboratory soil testing and qualified local agricultural expertise.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 5: REGISTRATION & DEMO LOGIN -->
+    <section class="section section-shell register-section" id="register">
+      <div class="register-copy">
+        <div class="eyebrow" data-i18n="regEye">START WITH YOUR FIELD</div>
+        <h2 data-i18n="regTitle">Good advice begins<br>with <em>local context.</em></h2>
+        <p data-i18n="regDesc">
+          Set up a sample farmer profile to explore the prototype. Information stays safely in this browser session and
+          is not transmitted to a public server.
+        </p>
+        <div class="register-points">
+          <span data-i18n="regP1">✓ Field-specific zone intelligence</span>
+          <span data-i18n="regP2">✓ Local-language voice & text ready</span>
+          <span data-i18n="regP3">✓ Built for future Supabase & Map backend</span>
+        </div>
+      </div>
+      <form class="register-card" id="registerForm">
+        <div class="form-card-heading">
+          <div>
+            <small data-i18n="regCardTag">FARMER REGISTRATION</small>
+            <h3 data-i18n="regCardTitle">Create demo profile</h3>
+          </div>
+          <span class="form-step">01 / 01</span>
+        </div>
+        <div class="form-grid">
+          <label>
+            <span data-i18n="fldName">Full name</span>
+            <input id="fullName" name="fullName" placeholder="e.g. Ramesh Kumar" value="Ramesh Kumar" required
+              minlength="2">
+          </label>
+          <label>
+            <span data-i18n="fldMobile">Mobile number</span>
+            <input id="mobile" name="mobile" type="tel" inputmode="numeric" placeholder="10-digit mobile number"
+              value="9876543210" pattern="[6-9][0-9]{9}" maxlength="10" title="10-digit Indian mobile number" required>
+          </label>
+          <label>
+            <span data-i18n="fldExp">Farming experience</span>
+            <select id="experience" name="experience">
+              <option value="Less than 2 years">Less than 2 years</option>
+              <option value="2–5 years">2–5 years</option>
+              <option value="6–10 years" selected>6–10 years</option>
+              <option value="10+ years">10+ years</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="fldLoc">Current location</span>
+            <input id="locationInput" name="location" placeholder="Village, district, state"
+              value="Ghaziabad, Uttar Pradesh" required>
+          </label>
+          <label>
+            <span data-i18n="fldCrop">Primary crop</span>
+            <select id="cropSelect" name="crop">
+              <option value="Wheat" selected>Wheat (गेहूँ)</option>
+              <option value="Rice">Rice (धान)</option>
+              <option value="Mustard">Mustard (सरसों)</option>
+              <option value="Sugarcane">Sugarcane (गन्ना)</option>
+              <option value="Cotton">Cotton (कपास)</option>
+              <option value="Maize">Maize (मक्का)</option>
+              <option value="Pulses">Pulses (दालें)</option>
+              <option value="Vegetables">Vegetables (सब्जियाँ)</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="fldSize">Field size (acres)</span>
+            <input id="fieldSize" name="fieldSize" type="number" min="0.1" step="0.1" placeholder="e.g. 2.5"
+              value="2.5">
+          </label>
+        </div>
+        <div class="geo-row">
+          <div class="geo-icon">⌖</div>
+          <div>
+            <strong data-i18n="geoHeading">Field coordinates <span class="optional-label"
+                data-i18n="optTag">OPTIONAL</span></strong>
+            <p id="geoStatus" data-i18n="geoStatusText">Use browser GPS location or enter coordinates manually.</p>
+            <div class="coords-inputs">
+              <input id="latitude" placeholder="Latitude" aria-label="Latitude" value="28.6692">
+              <input id="longitude" placeholder="Longitude" aria-label="Longitude" value="77.4538">
+            </div>
+          </div>
+          <button class="button button-outline button-small" type="button" id="locateBtn" data-i18n="geoBtn">Use my
+            location</button>
+        </div>
+        <p class="form-error" id="formError" role="alert"></p>
+        <button class="button button-lime full-button" type="submit" data-i18n="btnCreateProfile">Save & Open Dashboard
+          <span>↗</span></button>
+        <p class="privacy-note" data-i18n="regPrivacyNote">Demo session only · Stored locally in memory · No backend
+          transmission.</p>
+      </form>
+    </section>
+
+    <!-- DEMO LOGIN SECTION -->
+    <section class="section login-section" id="login">
+      <div class="section-shell login-layout">
+        <div>
+          <div class="eyebrow" data-i18n="loginEye">YOUR FARM, YOUR VIEW</div>
+          <h2 data-i18n="loginTitle">Welcome back<br>to <em>KrishiVed.</em></h2>
+          <p data-i18n="loginDesc">
+            Use the demo sign-in to review the hackathon prototype. Real OTP and database authentication will integrate
+            with Supabase.
+          </p>
+        </div>
+        <form id="loginForm" class="login-card">
+          <div class="login-card-top">
+            <span class="login-icon">कृ</span>
+            <span class="demo-tag" data-i18n="demoAuthTag">DEMO AUTH</span>
+          </div>
+          <h3 data-i18n="loginCardTitle">Farmer login</h3>
+          <p data-i18n="loginCardSub">Access your sample field workspace.</p>
+          <label>
+            <span data-i18n="fldMobile">Mobile number</span>
+            <input id="loginMobile" type="tel" inputmode="numeric" pattern="[6-9][0-9]{9}" maxlength="10"
+              title="10-digit Indian mobile number" placeholder="Enter 10-digit mobile number" value="9876543210"
+              required>
+          </label>
+          <label>
+            <span data-i18n="fldPass">Demo password</span>
+            <input id="loginPassword" type="password" placeholder="Any demo password" value="demo123" required>
+          </label>
+          <button class="button button-dark full-button" type="submit" data-i18n="btnLogin">Login to dashboard
+            <span>↗</span></button>
+          <button class="demo-login-btn" id="demoLogin" type="button" data-i18n="btnQuickDemo">Continue with sample
+            farmer (Ramesh Kumar) →</button>
+          <div id="loginMessage" class="inline-message" aria-live="polite"></div>
+          <p class="privacy-note" data-i18n="loginNote">Demo mode: No OTP is sent. Credentials are not verified or
+            stored.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- SCENE 6 & 7: FARMER DASHBOARD & FIELD ZONES -->
+    <section class="section section-shell dashboard-section" id="dashboard">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow" data-i18n="dashEye">FARMER WORKSPACE</div>
+          <h2 data-i18n="dashTitle">Your field, at<br><em>a glance.</em></h2>
+        </div>
+        <div class="heading-right">
+          <span class="demo-tag">● DEMO / ILLUSTRATIVE DATA</span>
+          <p data-i18n="dashSub">A sample interactive view of how satellite signals translate into clear next steps.</p>
+        </div>
+      </div>
+      <div class="dashboard-frame">
+        <aside class="dash-sidebar">
+          <div class="dash-brand">
+            <span class="mini-mark">कृ</span>
+            <div>
+              <strong>KrishiVed</strong>
+              <small data-i18n="dashSidebarTag">FARMER VIEW</small>
+            </div>
+          </div>
+          <div class="farmer-mini">
+            <div class="farmer-avatar" id="dashAvatar">R</div>
+            <div>
+              <strong id="dashFarmerName">Ramesh Kumar</strong>
+              <small data-i18n="sampleFarmerLabel">Sample farmer profile</small>
+            </div>
+          </div>
+          <div class="side-label" data-i18n="sideWorkspace">WORKSPACE</div>
+          <a class="side-link active" href="#dashboard">▦ <span data-i18n="sideOverview">Overview</span></a>
+          <a class="side-link" href="#report">⌖ <span data-i18n="sideReport">Field report</span></a>
+          <a class="side-link" href="#assistant">✳ <span data-i18n="sideAssistant">Ask Farmer Friend</span></a>
+          <a class="side-link" href="#hub">♧ <span data-i18n="sideHub">Natural Fertilizer Hub</span></a>
+          <div class="sidebar-weather">
+            <span class="weather-sun">☼</span>
+            <div>
+              <small data-i18n="weatherTag">LOCAL WEATHER · DEMO</small>
+              <strong>29° C <small data-i18n="weatherSky">Partly cloudy</small></strong>
+              <p data-i18n="weatherRain">Rain chance: 30%</p>
+            </div>
+          </div>
+        </aside>
+        <div class="dash-main">
+          <div class="dash-topline">
+            <div>
+              <small data-i18n="dashPlotTag">MONITORING / SAMPLE FIELD</small>
+              <h3>North Plot <span class="status-pill" data-i18n="statusMonitoring">Monitoring</span></h3>
+              <p id="dashFieldMeta">Ghaziabad, Uttar Pradesh · Wheat · 2.5 acres · Sample field</p>
+            </div>
+            <button class="button button-outline button-small" id="editFieldBtn" data-i18n="btnEditField">＋ Edit
+              field</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card" id="cardVigour">
+              <div class="metric-label"><span data-i18n="metricVigour">Crop vigour</span> <span>↗</span></div>
+              <strong id="dashVigourVal">62% · Review needed</strong>
+              <div class="metric-foot">
+                <span class="metric-bar"><i id="dashVigourBar" style="width:62%"></i></span>
+                <small data-i18n="metricVigourSub">Illustrative NDVI index</small>
+              </div>
+            </article>
+            <article class="metric-card" id="cardMoisture">
+              <div class="metric-label"><span data-i18n="metricMoisture">Surface moisture</span> <span>◌</span></div>
+              <strong id="dashMoistureVal">58% · Moderate</strong>
+              <div class="metric-foot">
+                <span class="metric-bar bar-blue"><i id="dashMoistureBar" style="width:58%"></i></span>
+                <small data-i18n="metricMoistureSub">Weather context needed</small>
+              </div>
+            </article>
+            <article class="metric-card" id="cardStress">
+              <div class="metric-label"><span data-i18n="metricStress">Stress indicators</span> <span>⌁</span></div>
+              <strong id="stressCount">3 zones to review</strong>
+              <div class="metric-foot">
+                <span class="metric-bar bar-amber"><i id="dashStressBar" style="width:68%"></i></span>
+                <small data-i18n="metricStressSub">Not a diagnostic N-P-K</small>
+              </div>
+            </article>
+          </div>
+          <div class="dash-content-grid">
+            <article class="dash-panel zone-panel">
+              <div class="panel-heading">
+                <div>
+                  <h4 data-i18n="panelZoneTitle">Field zone overview</h4>
+                  <p data-i18n="panelZoneDesc">Tap any zone to see its priority and advice.</p>
+                </div>
+                <span class="demo-tag">DEMO MAP</span>
+              </div>
+              <div class="dashboard-field" aria-label="Interactive dashboard zones">
+                <button class="dash-zone z1" data-zone="A">A</button>
+                <button class="dash-zone z2" data-zone="B">B</button>
+                <button class="dash-zone z3 selected" data-zone="C" aria-pressed="true">C</button>
+                <button class="dash-zone z4" data-zone="D">D</button>
+                <button class="dash-zone z5" data-zone="E">E</button>
+                <button class="dash-zone z6" data-zone="F">F</button>
+              </div>
+              <div class="zone-legend">
+                <span><i class="legend-green"></i> <span data-i18n="legRoutine">Routine watch</span></span>
+                <span><i class="legend-blue"></i> <span data-i18n="legMoist">Moisture check</span></span>
+                <span><i class="legend-amber"></i> <span data-i18n="legSoil">Nutrient clue (Soil test)</span></span>
+                <span><i class="legend-orange"></i> <span data-i18n="legScout">Scout crop stress</span></span>
+              </div>
+              <div class="selected-zone-detail">
+                <div>
+                  <small id="dashZoneName">ZONE C</small>
+                  <strong id="dashZoneTitle">Potential nutrient-stress clue</strong>
+                </div>
+                <a href="#report" data-i18n="linkOpenReport">Open report ↗</a>
+              </div>
+            </article>
+            <article class="dash-panel action-panel">
+              <div class="panel-heading">
+                <div>
+                  <h4 data-i18n="actionPanelTitle">Recommended next steps</h4>
+                  <p data-i18n="actionPanelDesc">Validate in field before changing inputs.</p>
+                </div>
+                <span>↗</span>
+              </div>
+              <label class="action-item">
+                <input type="checkbox">
+                <span class="checkmark"></span>
+                <span>
+                  <strong data-i18n="act1Title">Inspect Zone C</strong>
+                  <small data-i18n="act1Desc">Check leaf discoloration; do not guess chemical fertilizer.</small>
+                </span>
+                <em data-i18n="tagToday">Today</em>
+              </label>
+              <label class="action-item">
+                <input type="checkbox">
+                <span class="checkmark"></span>
+                <span>
+                  <strong data-i18n="act2Title">Check soil moisture</strong>
+                  <small data-i18n="act2Desc">Verify 10–15 cm root depth before running tube well.</small>
+                </span>
+                <em data-i18n="tagToday">Today</em>
+              </label>
+              <label class="action-item">
+                <input type="checkbox">
+                <span class="checkmark"></span>
+                <span>
+                  <strong data-i18n="act3Title">Collect soil core sample</strong>
+                  <small data-i18n="act3Desc">Send to local lab to validate exact N-P-K requirements.</small>
+                </span>
+                <em data-i18n="tagNext">Next</em>
+              </label>
+              <a class="button button-dark full-button" href="#report" data-i18n="btnViewFullReport">View field report
+                <span>↗</span></a>
+            </article>
+          </div>
+          <!-- Field History Timeline matching real Sentinel-2 satellite pass -->
+          <div class="history-strip">
+            <div>
+              <span class="history-icon">▤</span>
+              <div>
+                <strong data-i18n="histHeading">Field history</strong>
+                <small data-i18n="histSub">Sentinel-2 observations & logs</small>
+              </div>
+            </div>
+            <div class="history-entry">
+              <small>TODAY · SATELLITE PASS</small>
+              <strong data-i18n="hist1">Sentinel-2 pass: Zone C NDVI at 0.62; flagged for soil validation</strong>
+            </div>
+            <div class="history-entry">
+              <small>08 OCT · SCOUT LOG</small>
+              <strong data-i18n="hist2">Farmer log: Zone B surface moisture dip noted at root depth</strong>
+            </div>
+            <div class="history-entry">
+              <small>02 OCT · WEATHER</small>
+              <strong data-i18n="hist3">Rain event: 14mm localized showers; tillering stage entered</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 8: FIELD & SOIL INTELLIGENCE REPORT -->
+    <section class="section report-section" id="report">
+      <div class="section-shell">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow" data-i18n="repEye">FIELD INTELLIGENCE REPORT</div>
+            <h2 data-i18n="repTitle">From a map signal<br><em>to a field action.</em></h2>
+          </div>
+          <div class="heading-right">
+            <span class="demo-tag">SAMPLE REPORT · NOT LIVE DATA</span>
+            <p data-i18n="repSub">All values and zones below are illustrative to demonstrate precision agriculture
+              workflow.</p>
+          </div>
+        </div>
+        <div class="report-layout">
+          <!-- LEFT-SIDE FIELD SUMMARY PANEL -->
+          <aside class="field-summary-panel" id="fieldSummaryPanel" aria-label="Field Summary">
+            <div class="summary-header">
+              <div class="summary-title-wrap">
+                <span class="summary-badge">ADVISORY INTEL</span>
+                <h3 id="fieldSummaryTitle" data-i18n="fieldSummaryTitle">Field Summary / खेत का सारांश</h3>
+              </div>
+              <span class="summary-zone-pill" id="summaryZonePill">Zone C</span>
+            </div>
+
+            <!-- Subsection 1: Field Overview -->
+            <section class="summary-section" id="sumSecOverview">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">1</span>
+                <span data-i18n="sumSec1Title">Field Overview</span>
+              </h4>
+              <div class="summary-sec-content" id="sumOverviewContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 2: Observed Field Condition -->
+            <section class="summary-section" id="sumSecCondition">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">2</span>
+                <span data-i18n="sumSec2Title">Observed Field Condition</span>
+              </h4>
+              <div class="summary-sec-content" id="sumConditionContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 3: Recommended Next Steps -->
+            <section class="summary-section" id="sumSecSteps">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">3</span>
+                <span data-i18n="sumSec3Title">Recommended Next Steps</span>
+              </h4>
+              <div class="summary-sec-content" id="sumStepsContent">
+                <!-- Dynamically populated with numbered steps -->
+              </div>
+            </section>
+
+            <!-- Subsection 4: Irrigation and Moisture Guidance -->
+            <section class="summary-section" id="sumSecIrrigation">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">4</span>
+                <span data-i18n="sumSec4Title">Irrigation &amp; Moisture Guidance</span>
+              </h4>
+              <div class="summary-sec-content" id="sumIrrigationContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 5: Fertilizer and Soil Testing Guidance -->
+            <section class="summary-section" id="sumSecFertilizer">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">5</span>
+                <span data-i18n="sumSec5Title">Fertilizer &amp; Soil Testing Guidance</span>
+              </h4>
+              <div class="summary-sec-content" id="sumFertilizerContent">
+                <!-- Dynamically populated with clear N-P-K reminder -->
+              </div>
+            </section>
+
+            <!-- Subsection 6: Pest and Disease Inspection -->
+            <section class="summary-section" id="sumSecPest">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">6</span>
+                <span data-i18n="sumSec6Title">Pest &amp; Disease Inspection</span>
+              </h4>
+              <div class="summary-sec-content" id="sumPestContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 7: When to Contact a Local Agricultural Expert -->
+            <section class="summary-section" id="sumSecExpert">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">7</span>
+                <span data-i18n="sumSec7Title">When to Contact an Expert</span>
+              </h4>
+              <div class="summary-sec-content" id="sumExpertContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Actions inside Left Panel -->
+            <div class="summary-actions">
+              <button type="button" class="button button-lime full-button" id="downloadSummaryBtn" data-i18n="btnDownloadSummary">
+                Download Summary Page ↓
+              </button>
+              <div class="summary-sub-actions">
+                <a class="button button-outline" href="#assistant" data-i18n="btnAskAssistant">Ask Farmer Friend ↗</a>
+              </div>
+            </div>
+          </aside>
+
+          <!-- RIGHT-SIDE INTERACTIVE INTEL & MAPS -->
+          <div class="report-intel-column">
+            <!-- 1. Google Map & Live Location Card -->
+            <article class="report-map-card" id="reportMapCard">
+              <div class="report-map-head">
+                <div>
+                  <small>FIELD LOCATION · GEO-INTELLIGENCE</small>
+                  <h3 id="reportMapHead" data-i18n="repMapHead">Plot Location &amp; Satellite Coordinates</h3>
+                </div>
+                <span class="map-mode-badge" id="mapModeBadge">Demo Map Mode</span>
+              </div>
+
+              <!-- Location & Coordinates Control Bar -->
+              <div class="report-loc-bar">
+                <button type="button" class="button button-lime button-small" id="reportLiveLocationBtn" title="Detect GPS coordinates">
+                  <span class="gps-icon">⌖</span> <span data-i18n="btnLiveLocation">Use Live Location</span>
+                </button>
+                <div class="report-coord-inputs">
+                  <label class="coord-field">
+                    <span>Lat:</span>
+                    <input type="number" id="reportLatInput" step="0.0001" min="-90" max="90" placeholder="28.6692" value="28.6692">
+                  </label>
+                  <label class="coord-field">
+                    <span>Lng:</span>
+                    <input type="number" id="reportLngInput" step="0.0001" min="-180" max="180" placeholder="77.4538" value="77.4538">
+                  </label>
+                  <button type="button" class="button button-dark button-small" id="reportApplyCoordsBtn" data-i18n="btnSetCoords">Set</button>
+                </div>
+              </div>
+              <div class="report-loc-status" id="reportLocStatus" role="status">
+                Click "Use Live Location" or enter coordinates manually.
+              </div>
+
+              <!-- Map Container: Google Map + Fallback Map -->
+              <div class="report-map-container" id="reportMapContainer">
+                <div id="reportGoogleMap" class="report-google-map" style="display:none;"></div>
+                
+                <div id="reportDemoMapFallback" class="report-fallback-map">
+                  <div class="fallback-map-grid" id="fallbackMapGrid" title="Click anywhere on the field to place marker">
+                    <div class="fallback-satellite-texture"></div>
+                    <div class="fallback-crosshair-lines"></div>
+                    <div class="fallback-marker" id="fallbackMapMarker" style="left:52%; top:48%;">
+                      <div class="marker-pulse"></div>
+                      <div class="marker-pin">📍</div>
+                      <div class="marker-tooltip" id="fallbackMarkerTooltip">28.6692° N, 77.4538° E</div>
+                    </div>
+                  </div>
+                  <div class="fallback-api-notice">
+                    <span class="notice-icon">ℹ️</span>
+                    <div class="notice-text">
+                      <strong data-i18n="fallbackTitle">Interactive Demo Fallback Map</strong>
+                      <small data-i18n="fallbackDesc">A valid Google Maps API key is required for live satellite imagery tiles. Click map or "Use Live Location" to interactively update coordinates.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="report-map-foot">
+                <span>⌖ <span id="reportLocation">Ghaziabad, Uttar Pradesh</span></span>
+                <span>
+                  <span id="reportCoords">28.6692° N · 77.4538° E</span>
+                  <button id="copyCoords" class="copy-btn" title="Copy coordinates">▣</button>
+                </span>
+              </div>
+            </article>
+
+            <!-- 2. Thermal-Style Field Visualization Card -->
+            <article class="thermal-map-card" id="reportThermalCard">
+              <div class="thermal-card-head">
+                <div>
+                  <small>SIMULATED SATELLITE BAND COMPOSITE</small>
+                  <h3 data-i18n="thermalCardTitle">Thermal &amp; Vegetation Stress Map</h3>
+                </div>
+                <span class="thermal-disclaimer-pill">SIMULATED DATA</span>
+              </div>
+
+              <!-- Thermal Heatmap Canvas / View -->
+              <div class="thermal-map-view" id="reportThermalMap">
+                <div class="thermal-gradient-bg"></div>
+                <div class="thermal-scanline"></div>
+                
+                <!-- Zone Buttons with Live Priority Color Badges -->
+                <div class="thermal-zones-layer" aria-label="Field Zones">
+                  <button type="button" class="report-zone thermal-zone rz-a" data-zone="A">
+                    <span class="zone-letter">A</span>
+                    <span class="zone-mini-tag">Vigour</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-b" data-zone="B">
+                    <span class="zone-letter">B</span>
+                    <span class="zone-mini-tag">Moisture</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-c selected" data-zone="C" aria-pressed="true">
+                    <span class="zone-letter">C</span>
+                    <span class="zone-mini-tag">Nutrient?</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-d" data-zone="D">
+                    <span class="zone-letter">D</span>
+                    <span class="zone-mini-tag">Watch</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-e" data-zone="E">
+                    <span class="zone-letter">E</span>
+                    <span class="zone-mini-tag">Stress</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-f" data-zone="F">
+                    <span class="zone-letter">F</span>
+                    <span class="zone-mini-tag">Stable</span>
+                  </button>
+                </div>
+
+                <div class="thermal-legend-bar">
+                  <div class="legend-scale">
+                    <span class="scale-color sc-green"></span><span>High Vigour</span>
+                    <span class="scale-color sc-yellow"></span><span>Moisture Deficit</span>
+                    <span class="scale-color sc-red"></span><span>Nutrient Clue</span>
+                    <span class="scale-color sc-orange"></span><span>Stress / Pests</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="thermal-disclaimer-banner">
+                <span class="disclaimer-icon">⚠️</span>
+                <span>DEMO SATELLITE / SIMULATED FIELD DATA — NOT LIVE SATELLITE IMAGERY.</span>
+              </div>
+
+              <!-- Active Zone Details Strip -->
+              <div class="report-status">
+                <span class="status-symbol">!</span>
+                <div>
+                  <small id="reportZoneTag">ZONE C · NUTRIENT-STRESS CLUE</small>
+                  <h3 id="reportZoneTitle">Soil testing recommended</h3>
+                  <p id="reportZoneDesc">
+                    Crop vigour here differs from nearby zones. Nutrient stress is only one possible cause: inspect the
+                    crop, then collect a soil sample. No mineral nutrient value is measured or inferred directly from
+                    satellite imagery.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Quick stats grid -->
+              <div class="report-stats">
+                <div><small data-i18n="statCrop">Crop</small><strong id="reportCrop">Wheat (गेहूँ)</strong></div>
+                <div><small data-i18n="statStage">Crop stage</small><strong data-i18n="statStageVal">Tillering · sample</strong></div>
+                <div><small data-i18n="statWeather">Weather context</small><strong>29°C · partly cloudy*</strong></div>
+                <div><small data-i18n="statMoisture">Surface moisture</small><strong data-i18n="statMoistVal">Verify at root depth</strong></div>
+              </div>
+            </article>
+
+            <!-- 3. Validation Box & Flow Panel (Preserved) -->
+            <div class="validation-box">
+              <div class="validation-icon">✓</div>
+              <div>
+                <strong data-i18n="valBoxTitle">Validate before recommending nutrients</strong>
+                <p data-i18n="valBoxDesc">
+                  Collect a representative soil sample and consult a local agronomist. Satellite patterns flag
+                  clues—they are not direct N–P–K measurements.
+                </p>
+              </div>
+            </div>
+
+            <div class="flow-panel" id="validationPanel">
+              <strong data-i18n="flowTitle">Soil Validation → Advisory Flow (Demo)</strong>
+              <div class="flow-steps" role="group" aria-label="Soil test status">
+                <button type="button" class="flow-btn" data-soil="none" data-i18n="soilNone">1 · Soil test not
+                  done</button>
+                <button type="button" class="flow-btn" data-soil="sent" data-i18n="soilSent">2 · Sample sent to
+                  lab</button>
+                <button type="button" class="flow-btn active" data-soil="result" data-i18n="soilResult">3 · Lab result
+                  received (demo)</button>
+              </div>
+              <div class="advisory-text-row">
+                <p class="advisory-text" id="advisoryText" aria-live="polite"></p>
+                <button type="button" class="advisory-voice-btn" id="speakSoilAdvisoryBtn" title="Listen to Soil Advisory">
+                  <span>🔊</span> <span data-i18n="voiceListenAdv">Listen</span>
+                </button>
+              </div>
+              <a class="button button-lime full-button" id="goHub" href="#hub" data-i18n="goHub">Explore natural
+                fertilizer options ↗</a>
+            </div>
+
+            <!-- 4. Multilingual Farmer Voice Advisory Card -->
+            <article class="voice-advisory-card" id="voiceAdvisoryCard">
+              <div class="voice-card-head">
+                <div class="voice-title-wrap">
+                  <span class="voice-icon-pulse">🎙️</span>
+                  <div>
+                    <h3 id="voiceCardTitle" data-i18n="voiceCardTitle">Listen to Farmer Advice / किसान की सलाह सुनें</h3>
+                    <small data-i18n="voiceCardSub">Interactive Text-to-Speech Advisory · 23 Indian Languages</small>
+                  </div>
+                </div>
+                <span class="voice-status-badge ready" id="voiceStatusBadge">Ready</span>
+              </div>
+
+              <div class="voice-controls-row">
+                <div class="voice-lang-picker">
+                  <label for="voiceLangSelect">
+                    <span class="globe-icon">🌐</span>
+                    <span data-i18n="voiceLangLabel">Voice Language:</span>
+                  </label>
+                  <select id="voiceLangSelect" title="Select Voice Advisory Language">
+                    <option value="en">English</option>
+                    <option value="hi" selected>हिन्दी (Hindi)</option>
+                    <option value="ur">اردو (Urdu)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                    <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                    <option value="as">অসমীয়া (Assamese)</option>
+                    <option value="mai">मैथिली (Maithili)</option>
+                    <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+                    <option value="ks">کٲشُر (Kashmiri)</option>
+                    <option value="ne">नेपाली (Nepali)</option>
+                    <option value="kok">कोंकणी (Konkani)</option>
+                    <option value="sd">سنڌي (Sindhi)</option>
+                    <option value="doi">डोगरी (Dogri)</option>
+                    <option value="brx">बड़ो (Bodo)</option>
+                    <option value="mni">মৈতৈলোন্ (Manipuri)</option>
+                    <option value="sa">संस्कृतम् (Sanskrit)</option>
+                  </select>
+                </div>
+
+                <div class="voice-btn-group">
+                  <button type="button" class="button button-lime button-small" id="voicePlayBtn" title="Play Advisory">
+                    <span>▶</span> <span data-i18n="voicePlay">Listen</span>
+                  </button>
+                  <button type="button" class="button button-outline button-small" id="voicePauseBtn" title="Pause Advisory" disabled>
+                    <span>⏸</span> <span data-i18n="voicePause">Pause</span>
+                  </button>
+                  <button type="button" class="button button-outline button-small" id="voiceResumeBtn" title="Resume Advisory" style="display:none;">
+                    <span>⏯</span> <span data-i18n="voiceResume">Resume</span>
+                  </button>
+                  <button type="button" class="button button-dark button-small" id="voiceStopBtn" title="Stop Advisory" disabled>
+                    <span>⏹</span> <span data-i18n="voiceStop">Stop</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Spoken transcript viewer -->
+              <div class="voice-transcript-box" id="voiceTranscriptBox" aria-live="polite">
+                <span class="transcript-prefix">🔊 Live Voice Text:</span>
+                <p id="voiceTranscriptText">Click "Listen" to hear voice advisory for the selected zone.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <p class="tiny-note" data-i18n="reportDisclaimerNote">*Weather is illustrative demo content. No live satellite,
+          weather, or soil-test API is connected.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 9: AI FARMER FRIEND (CHATBOT) -->
+    <section class="section assistant-section" id="assistant">
+      <div class="section-shell assistant-layout">
+        <div class="assistant-intro">
+          <div class="eyebrow" data-i18n="aiEye">ASK IN SIMPLE LANGUAGE</div>
+          <h2 data-i18n="aiTitle">Your <em>AI Farmer Friend.</em></h2>
+          <p data-i18n="aiDesc">
+            Ask a practical question about crop stress, irrigation timing, soil testing protocols, or natural fertilizer
+            options. This is a rule-based demo assistant—not an external live AI service.
+          </p>
+          <div class="assistant-badges">
+            <span data-i18n="badgeDemo">● DEMO PROTOTYPE</span>
+            <span data-i18n="badgeGuide">Farmer-friendly guidance</span>
+            <span data-i18n="badgeLanguages">Hindi · Urdu · English</span>
+          </div>
+          <div class="assistant-note">
+            <span>✳</span>
+            <p data-i18n="aiExpertNote">
+              For acute crop disease or severe infestation, always cross-verify symptoms with your local Krishi Vigyan
+              Kendra (KVK) officer or qualified agronomist.
+            </p>
+          </div>
+        </div>
+        <div class="chat-card">
+          <div class="chat-header">
+            <div class="bot-avatar">कृ</div>
+            <div>
+              <strong data-i18n="botName">KrishiVed Saathi (AI Farmer Friend)</strong>
+              <small><span class="online-dot"></span> <span data-i18n="botStatus">Demo assistant · Multilingual rule
+                  engine</span></small>
+            </div>
+            <button id="botVoiceToggle" class="chat-voice-toggle" type="button" title="Toggle Auto Voice" aria-pressed="true">
+              <span class="voice-toggle-icon">🔊</span> <span class="voice-toggle-label" data-i18n="voiceToggleOn">Voice ON</span>
+            </button>
+            <button id="clearChat" class="chat-clear" type="button" title="Clear chat">↻</button>
+          </div>
+          <div class="chat-messages" id="chatMessages" aria-live="polite">
+            <div class="chat-date" data-i18n="chatDate">TODAY · DEMO SESSION</div>
+            <div class="message bot-message">
+              <div class="message-avatar">कृ</div>
+              <div class="message-bubble">
+                <p id="chatGreeting" data-i18n="chatGreeting">Namaste! 🌱 I’m your demo Farmer Friend. Tell me what
+                  you’re noticing in your field (e.g. Zone B moisture, Zone C nutrient clues, irrigation timing, or soil
+                  testing), and I’ll suggest a sensible next step.</p>
+                <div class="bubble-foot">
+                  <small>11:20 AM · DEMO</small>
+                  <button type="button" class="bubble-speak-btn" id="initialGreetingSpeakBtn" title="Listen to advice">
+                    <span>🔊</span> <span class="speak-label">Listen</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="suggested-questions">
+            <button type="button" data-question="What should I do if crop vigour looks low?" data-i18n="chipVigour">Low
+              crop vigour</button>
+            <button type="button" data-question="When should I irrigate my field?" data-i18n="chipIrrig">Irrigation
+              timing</button>
+            <button type="button" data-question="How do I get my soil tested for N-P-K?" data-i18n="chipSoil">Soil
+              testing (N-P-K)</button>
+            <button type="button" data-question="How should I choose natural fertilizer?" data-i18n="chipFert">Natural
+              fertilizer</button>
+            <button type="button" data-question="Tell me about Zone C nutrient clue" data-i18n="chipZoneC">Zone C
+              clue</button>
+            <button type="button" data-question="How can farmers earn in off-season?"
+              data-i18n="chipLivelihood">Off-season income</button>
+          </div>
+          <form class="chat-input-row" id="chatForm">
+            <input id="chatInput" placeholder="Ask about your field (e.g. Zone C, soil test, watering)..."
+              autocomplete="off" required>
+            <button type="button" id="chatMicBtn" class="chat-mic-btn" title="Speak question to Adviser (Microphone)" aria-label="Speak question with microphone">
+              🎙️
+            </button>
+            <button aria-label="Send message" type="submit">↑</button>
+          </form>
+          <div class="chat-footnote" data-i18n="chatFootnote">
+            Demo replies are general guidance grounded in agronomy, not a clinical prescription.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 10: NATURAL FERTILIZER HUB (FUTURE / PILOT CONCEPT) -->
+    <section class="section hub-section" id="hub">
+      <div class="section-shell">
+        <div class="hub-heading">
+          <div>
+            <div class="eyebrow" data-i18n="hubEye">FUTURE / PILOT CONCEPT</div>
+            <h2 data-i18n="hubTitle">Natural Fertilizer Hub.<br><em>Local knowledge, local opportunity.</em></h2>
+          </div>
+          <div class="future-stamp">
+            <span>✳</span>
+            <strong data-i18n="stampPilot">FUTURE MODULE</strong>
+            <small data-i18n="stampPilotSub">Pilot concept · Not a live shop</small>
+          </div>
+        </div>
+        <p class="hub-lede" data-i18n="hubLede">
+          After field validation and laboratory soil testing, a future KrishiVed ecosystem could help farmers explore
+          suitable natural agricultural inputs and discover verified local producers. Product suitability and dosage
+          always require independent agronomic checks.
+        </p>
+
+        <!-- Dynamic Hub Gate Banner tied to Soil Test Validation in Field Report -->
+        <div class="hub-gate open" id="hubGate" role="status">
+          ✓ Soil-test result marked received (demo). Browse example options below, then confirm suitability with a local
+          advisor.
+        </div>
+
+        <div class="hub-filter-row">
+          <div class="hub-filters" role="group" aria-label="Filter demo products">
+            <button class="filter-btn active" data-filter="all" data-i18n="fltAll">All options</button>
+            <button class="filter-btn" data-filter="soil" data-i18n="fltSoil">Soil building</button>
+            <button class="filter-btn" data-filter="plant" data-i18n="fltPlant">Plant-based</button>
+            <button class="filter-btn" data-filter="farm" data-i18n="fltFarm">Farm-made</button>
+          </div>
+          <span class="demo-tag" data-i18n="tagDemoListings">ALL LISTINGS ARE DEMO PRODUCTS · NOT REAL
+            TRANSACTIONS</span>
+        </div>
+
+        <!-- Product Cards matching Requirement 7: Category, Description, Price, Producer, Location, Availability, Details -->
+        <div class="product-grid" id="productGrid">
+          <article class="product-card" data-category="soil">
+            <div class="product-art art-compost"><span>♧</span><small>DEMO PRODUCT</small></div>
+            <div class="product-info">
+              <div class="product-type" data-i18n="typeSoil">SOIL BUILDING · DEMO</div>
+              <h3 data-i18n="p1Name">Natural Compost</h3>
+              <p data-i18n="p1Desc">Organic matter option for soil structure and moisture retention. Suitability depends
+                on maturity and crop needs.</p>
+              <div class="product-meta">
+                <span>Example pack · 25 kg</span>
+                <strong>₹180 <small>demo price</small></strong>
+              </div>
+              <div class="product-location-info">
+                <span>📍 Ghaziabad East Cluster</span>
+                <span class="stock-pill">In stock (demo batch)</span>
+              </div>
+              <div class="product-seller">
+                <span class="seller-avatar">FP</span>
+                <span>
+                  <strong>Sample Farmer Producer (FP)</strong>
+                  <small>Local FPO supplier cluster</small>
+                </span>
+                <span class="seller-rating">★ Demo</span>
+              </div>
+              <button class="button button-outline full-button product-details" data-product="Natural Compost"
+                data-category="Soil building" data-pack="25 kg" data-price="₹180 (demo)"
+                data-location="Ghaziabad East Cluster" data-avail="In stock (demo batch · 15 packs)"
+                data-producer="Sample Farmer Producer Group" data-i18n="btnViewDetails">View details ↗</button>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="soil">
+            <div class="product-art art-vermi"><span>♧</span><small>DEMO PRODUCT</small></div>
+            <div class="product-info">
+              <div class="product-type" data-i18n="typeVermi">SOIL BUILDING · DEMO</div>
+              <h3 data-i18n="p2Name">Vermicompost</h3>
+              <p data-i18n="p2Desc">Earthworm-processed organic input rich in microbial activity. Check maturity and
+                soil test before use.</p>
+              <div class="product-meta">
+                <span>Example pack · 20 kg</span>
+                <strong>₹240 <small>demo price</small></strong>
+              </div>
+              <div class="product-location-info">
+                <span>📍 Muradnagar Block</span>
+                <span class="stock-pill">Available (seasonal)</span>
+              </div>
+              <div class="product-seller">
+                <span class="seller-avatar">LK</span>
+                <span>
+                  <strong>Sample Local Kisan Group (LK)</strong>
+                  <small>Local village collective</small>
+                </span>
+                <span class="seller-rating">★ Demo</span>
+              </div>
+              <button class="button button-outline full-button product-details" data-product="Vermicompost"
+                data-category="Soil building" data-pack="20 kg" data-price="₹240 (demo)"
+                data-location="Muradnagar Block" data-avail="Available on request (demo · seasonal)"
+                data-producer="Sample Local Kisan Collective" data-i18n="btnViewDetails">View details ↗</button>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="plant">
+            <div class="product-art art-neem"><span>❋</span><small>DEMO PRODUCT</small></div>
+            <div class="product-info">
+              <div class="product-type" data-i18n="typeNeem">PLANT-BASED INPUT · DEMO</div>
+              <h3 data-i18n="p3Name">Neem-based input</h3>
+              <p data-i18n="p3Desc">Botanical plant-derived input category. Intended for soil pest suppression and
+                organic nitrogen conditioning.</p>
+              <div class="product-meta">
+                <span>Example pack · 1 L / kg</span>
+                <strong>₹160 <small>demo price</small></strong>
+              </div>
+              <div class="product-location-info">
+                <span>📍 District Agri Hub</span>
+                <span class="stock-pill">Ready for dispatch (demo)</span>
+              </div>
+              <div class="product-seller">
+                <span class="seller-avatar">AG</span>
+                <span>
+                  <strong>Sample Agri Dealer (AG)</strong>
+                  <small>Authorised input dealer</small>
+                </span>
+                <span class="seller-rating">★ Demo</span>
+              </div>
+              <button class="button button-outline full-button product-details" data-product="Neem-based input"
+                data-category="Plant-based" data-pack="1 L / kg" data-price="₹160 (demo)"
+                data-location="District Agri Hub" data-avail="Ready for dispatch (demo · 20 units)"
+                data-producer="Sample Agri Dealer Network" data-i18n="btnViewDetails">View details ↗</button>
+            </div>
+          </article>
+
+          <article class="product-card" data-category="farm">
+            <div class="product-art art-bio"><span>♨</span><small>DEMO PRODUCT</small></div>
+            <div class="product-info">
+              <div class="product-type" data-i18n="typeBio">FARM-MADE · DEMO</div>
+              <h3 data-i18n="p4Name">Farm-made bio-input</h3>
+              <p data-i18n="p4Desc">A fermented bio-fertilizer concept prepared from cattle rearing and crop residues.
+                Requires local expert guidance.</p>
+              <div class="product-meta">
+                <span>Example batch · 5 L</span>
+                <strong>₹90 <small>demo price</small></strong>
+              </div>
+              <div class="product-location-info">
+                <span>📍 Village Collective Unit</span>
+                <span class="stock-pill">Fresh batch prep (demo)</span>
+              </div>
+              <div class="product-seller">
+                <span class="seller-avatar">FF</span>
+                <span>
+                  <strong>Sample Farm Collective (FF)</strong>
+                  <small>Community producer group</small>
+                </span>
+                <span class="seller-rating">★ Demo</span>
+              </div>
+              <button class="button button-outline full-button product-details" data-product="Farm-made bio-input"
+                data-category="Farm-made" data-pack="5 L" data-price="₹90 (demo)"
+                data-location="Village Collective Unit" data-avail="Fresh batch preparation on order (demo)"
+                data-producer="Sample Farm Collective" data-i18n="btnViewDetails">View details ↗</button>
+            </div>
+          </article>
+        </div>
+
+        <div class="quality-notice">
+          <span>ⓘ</span>
+          <p data-i18n="qualityNoticeText">
+            <strong>Quality & suitability first.</strong> These are fictional demo listings with illustrative prices and
+            suppliers. No product is certified, verified, or sold through KrishiVed today. Natural does not
+            automatically mean safe or appropriate for every crop and soil condition. Always verify labels, moisture,
+            maturity, and local agronomist recommendations before field application.
+          </p>
+        </div>
+
+        <!-- SCENE 11: FARMER LIVELIHOOD / OFF-SEASON CONCEPT -->
+        <div class="ecosystem" aria-label="Future local network concept">
+          <div class="eco-node">
+            <strong data-i18n="ecoNode1Title">Farmers</strong>
+            <small data-i18n="ecoNode1Desc">Access validated field advisory & test soil</small>
+          </div>
+          <span class="eco-arrow">⇄</span>
+          <div class="eco-node">
+            <strong data-i18n="ecoNode2Title">Local farmer-producers</strong>
+            <small data-i18n="ecoNode2Desc">Prepare natural compost with training & skill</small>
+          </div>
+          <span class="eco-arrow">⇄</span>
+          <div class="eco-node">
+            <strong data-i18n="ecoNode3Title">Local suppliers / dealers</strong>
+            <small data-i18n="ecoNode3Desc">Transparent distribution to nearby farms</small>
+          </div>
+          <p class="eco-seasons" data-i18n="ecoSeasonsText">
+            <strong>Off-season & drought opportunity:</strong> During low-income periods or drought, participating
+            farmers can earn supplementary income by preparing and supplying quality-tested organic inputs. This is a
+            future pilot concept: no guaranteed earnings; training, quality checks, and local agricultural standards
+            apply.
+          </p>
+        </div>
+
+        <div class="livelihood-banner">
+          <div class="livelihood-illustration">
+            <div class="sun-disc">☼</div>
+            <div class="field-lines"></div>
+            <div class="livelihood-sprout">♧</div>
+          </div>
+          <div class="livelihood-copy">
+            <div class="eyebrow" data-i18n="liveEye">FUTURE CONCEPT / PILOT</div>
+            <h3 data-i18n="liveTitle">From farmer<br>to local agri-entrepreneur.</h3>
+            <p data-i18n="liveDesc">
+              In off-seasons or low agricultural earning periods, participating farmers could produce or supply suitable
+              natural agricultural inputs, building local networks and generating supplementary income—subject to
+              training, local demand, quality checks, and regulations.
+            </p>
+            <a href="#producer" class="text-link" data-i18n="liveLink">Explore the livelihood network concept
+              <span>→</span></a>
+          </div>
+          <div class="livelihood-steps">
+            <div>
+              <span>01</span>
+              <strong data-i18n="liveS1Title">Learn & prepare</strong>
+              <small data-i18n="liveS1Desc">Agronomic training on compost maturity & safety</small>
+            </div>
+            <div>
+              <span>02</span>
+              <strong data-i18n="liveS2Title">Quality check</strong>
+              <small data-i18n="liveS2Desc">Lab testing for moisture, pathogens & heavy metals</small>
+            </div>
+            <div>
+              <span>03</span>
+              <strong data-i18n="liveS3Title">Supply locally</strong>
+              <small data-i18n="liveS3Desc">Transparent local listings for nearby farmers</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Local Producer Registry Concept -->
+        <div class="producer-panel" id="producer">
+          <div>
+            <div class="eyebrow" data-i18n="prodEye">LOCAL PRODUCER NETWORK · CONCEPT</div>
+            <h3 data-i18n="prodTitle">Potential local supply partners</h3>
+            <p data-i18n="prodDesc">Example profiles demonstrate how a future pilot network could display local
+              production transparently.</p>
+            <button class="button button-outline button-small" id="joinProducer" type="button"
+              data-i18n="btnJoinProducer">Register producer interest (demo) ＋</button>
+          </div>
+          <div class="producer-list">
+            <div class="producer-row">
+              <span class="producer-avatar">FP</span>
+              <span>
+                <strong>Sample Farmer Producer Group</strong>
+                <small>North District Cluster · Natural Compost · Example availability: 15 bags (demo)</small>
+              </span>
+              <span class="demo-tag">DEMO PROFILE</span>
+            </div>
+            <div class="producer-row">
+              <span class="producer-avatar">LK</span>
+              <span>
+                <strong>Sample Local Kisan Collective</strong>
+                <small>Nearby Block · Vermicompost · Example availability: seasonal batch (demo)</small>
+              </span>
+              <span class="demo-tag">DEMO PROFILE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE 13: ABOUT & VISION FOR INDIA -->
+    <section class="section section-shell about-section" id="about">
+      <div class="about-main">
+        <div class="eyebrow" data-i18n="abtEye">WHY KRISHIVED</div>
+        <h2 data-i18n="abtTitle">Technology in the sky.<br><em>Prosperity on the ground.</em></h2>
+        <p data-i18n="abtDesc">
+          KrishiVed is a precision-agriculture concept for India: satellite observations and AI-assisted pattern
+          analysis, combined with soil testing, field inspection, and local agronomy to make practical advice accessible
+          to every farmer.
+        </p>
+        <a href="#register" class="button button-lime" data-i18n="btnTryDemo">Try the demo <span>↗</span></a>
+      </div>
+      <div class="about-points">
+        <div>
+          <span>01</span>
+          <strong data-i18n="abtP1Title">Precision agriculture</strong>
+          <p data-i18n="abtP1Desc">Prioritise zones for field scouting rather than treating the whole farm uniformly.
+          </p>
+        </div>
+        <div>
+          <span>02</span>
+          <strong data-i18n="abtP2Title">Human-validated advice</strong>
+          <p data-i18n="abtP2Desc">Combine remote sensing with farmer wisdom, soil testing, and local extension workers.
+          </p>
+        </div>
+        <div>
+          <span>03</span>
+          <strong data-i18n="abtP3Title">Local-language access</strong>
+          <p data-i18n="abtP3Desc">Designed mobile-first with native support for Hindi, Urdu, and 20+ Indian regional
+            languages.</p>
+        </div>
+        <div>
+          <span>04</span>
+          <strong data-i18n="abtP4Title">Future livelihood network</strong>
+          <p data-i18n="abtP4Desc">Empower farmers to produce and supply quality natural inputs for off-season
+            resilience.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING & FUTURE PLANS -->
+    <section class="pricing-strip">
+      <div class="section-shell pricing-inner">
+        <div>
+          <div class="eyebrow" data-i18n="priceEye">PRICING & PLANS</div>
+          <h2 data-i18n="priceTitle">Built for farmers.<br><em>Coming soon.</em></h2>
+          <p data-i18n="priceDesc">Subscriptions, cooperative plans, and input marketplace connections are planned for a
+            future commercial release.</p>
+        </div>
+        <div class="pricing-card">
+          <span class="pricing-icon">₹</span>
+          <div>
+            <small data-i18n="priceCardTag">KRISHIVED PLANS</small>
+            <h3 data-i18n="comingSoon">COMING SOON</h3>
+            <p data-i18n="priceCardSub">No payments or real transactions are active in this hackathon prototype.</p>
+          </div>
+          <span class="coming-pill" data-i18n="badgeInDev">IN DEVELOPMENT</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL INSPIRATIONAL CTA -->
+    <section class="section section-shell next-section">
+      <div class="next-card">
+        <div>
+          <div class="eyebrow" data-i18n="finalEye">THE NEXT FIELD SEASON</div>
+          <h2 data-i18n="finalTitle">See more.<br><em>Waste less. Grow better.</em></h2>
+          <p data-i18n="finalDesc">
+            Start with one field, validate the signals with soil testing, and turn space insights into prosperity on the
+            ground.
+          </p>
+        </div>
+        <div class="next-actions">
+          <a class="button button-lime" href="#register" data-i18n="btnFinalCreate">Create demo profile ↗</a>
+          <a class="button button-light-outline" href="#how" data-i18n="btnFinalProcess">Review the process</a>
+        </div>
+        <div class="next-decoration">कृ</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SITE FOOTER -->
+  <footer class="site-footer">
+    <div class="section-shell footer-main">
+      <a class="brand footer-brand" href="#home">
+        <span class="brand-mark">कृ</span>
+        <span>
+          <strong>कृषिवेद</strong>
+          <small>KRISHIVED · FIELD INTELLIGENCE</small>
+        </span>
+      </a>
+      <p data-i18n="footerTagline">
+        Satellite-inspired insights. Grounded in field validation. Dedicated to India's farming communities.
+      </p>
+      <div class="footer-links">
+        <a href="#about" data-i18n="footAbout">About</a>
+        <a href="#solution" data-i18n="footSolution">Solution</a>
+        <a href="#how" data-i18n="footHow">How it works</a>
+        <a href="#hub" data-i18n="footHub">Future Hub</a>
+        <a href="#login" data-i18n="footLogin">Farmer login</a>
+      </div>
+    </div>
+    <div class="section-shell footer-bottom">
+      <span>© 2026 KrishiVed (कृषिवेद) · Hackathon Prototype</span>
+      <span data-i18n="footerLegal">
+        Demo data only · No live satellite, AI API, payment gateway, or external database connected.
+      </span>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Product Details Dialog (Modal) -->
+  <dialog class="product-dialog" id="productDialog">
+    <button class="dialog-close" id="closeProductDialog" aria-label="Close">×</button>
+    <span class="demo-tag">DEMO PRODUCT · PROTOTYPE LISTING</span>
+    <h3 id="dialogProductName">Natural Compost</h3>
+    <div class="dialog-category-badge" id="dialogProductCategory">Soil building</div>
+    <p id="dialogProductDescription">Illustrative description.</p>
+    <div class="dialog-details">
+      <div>
+        <small data-i18n="dlgPrice">Demo price</small>
+        <strong id="dialogProductPrice">₹180 / 25 kg</strong>
+      </div>
+      <div>
+        <small data-i18n="dlgProducer">Producer</small>
+        <strong id="dialogProductProducer">Sample Farmer Producer</strong>
+      </div>
+      <div>
+        <small data-i18n="dlgLocation">Location</small>
+        <strong id="dialogProductLocation">Ghaziabad East Cluster</strong>
+      </div>
+      <div>
+        <small data-i18n="dlgAvail">Availability</small>
+        <strong id="dialogProductAvail">In stock (demo)</strong>
+      </div>
+      <div>
+        <small data-i18n="dlgStatus">Listing status</small>
+        <strong>Illustrative only</strong>
+      </div>
+      <div>
+        <small data-i18n="dlgQuality">Quality check</small>
+        <strong>Requires lab test</strong>
+      </div>
+    </div>
+    <p class="dialog-disclaimer" data-i18n="dlgDisclaimer">
+      This is a concept listing for a future pilot ecosystem, not a real commercial transaction. Verify composition,
+      label directions, quality standards, and crop suitability with a qualified local agronomist.
+    </p>
+    <button class="button button-dark full-button" id="closeProductBtn" data-i18n="dlgBtnGotIt">Got it</button>
+  </dialog>
+
+  <!-- Producer Interest Dialog (Modal) -->
+  <dialog class="product-dialog" id="producerDialog">
+    <button class="dialog-close" id="closeProducerDialog" aria-label="Close">×</button>
+    <span class="demo-tag">LOCAL PRODUCER NETWORK · PILOT REGISTRATION</span>
+    <h3 data-i18n="prodDlgTitle">Register Producer Interest</h3>
+    <p data-i18n="prodDlgDesc">
+      Join the future pilot network as a farmer-producer to prepare and supply certified natural inputs during
+      off-seasons.
+    </p>
+    <form id="producerInterestForm" class="producer-interest-form">
+      <label>
+        <span data-i18n="prodInputLabel">Input category you can prepare:</span>
+        <select id="producerProductSelect">
+          <option value="Natural Compost">Natural Compost (कम्पोस्ट खाद)</option>
+          <option value="Vermicompost">Vermicompost (केंचुआ खाद)</option>
+          <option value="Neem-based input">Neem-based input (नीम अर्क / खली)</option>
+          <option value="Farm-made bio-input">Farm-made bio-input (जीवामृत / बीजामृत)</option>
+        </select>
+      </label>
+      <label>
+        <span data-i18n="prodSeasonLabel">Availability period:</span>
+        <select id="producerSeasonSelect">
+          <option value="Off-season (Summer)">Off-season (Summer / खाली समय)</option>
+          <option value="Post-harvest">Post-harvest (कटाई के बाद)</option>
+          <option value="Year-round batch">Year-round batch (साल भर)</option>
+        </select>
+      </label>
+      <button class="button button-lime full-button" type="submit" data-i18n="btnSubmitProducer">Submit Demo Interest
+        <span>＋</span></button>
+    </form>
+    <p class="privacy-note" data-i18n="prodDlgNote">Demo only · Stored locally in memory session · No real contract.</p>
+  </dialog>
+
+  <!-- Load scripts in order -->
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
