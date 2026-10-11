@@ -648,114 +648,162 @@
           </div>
           <div class="heading-right">
             <span class="demo-tag">SAMPLE REPORT · NOT LIVE DATA</span>
-            <p data-i18n="repSub">All values and zones below are illustrative to demonstrate precision agriculture workflow.</p>
+            <p data-i18n="repSub">All values and zones below are illustrative to demonstrate precision agriculture
+              workflow.</p>
           </div>
         </div>
-
         <div class="report-layout">
-          <!-- LEFT PANEL: Farmer-Friendly Field Summary (Requirement 2) -->
-          <aside class="field-summary-panel" id="fieldSummaryPanel" aria-label="Field Advisory Summary">
-            <div class="summary-panel-header">
-              <div class="summary-panel-eyebrow">
-                <span class="summary-live-dot"></span>
-                <span data-i18n="summaryEyebrow">LIVE FIELD ADVISORY</span>
+          <!-- LEFT-SIDE FIELD SUMMARY PANEL -->
+          <aside class="field-summary-panel" id="fieldSummaryPanel" aria-label="Field Summary">
+            <div class="summary-header">
+              <div class="summary-title-wrap">
+                <span class="summary-badge">ADVISORY INTEL</span>
+                <h3 id="fieldSummaryTitle" data-i18n="fieldSummaryTitle">Field Summary / खेत का सारांश</h3>
               </div>
-              <h3 data-i18n="summaryTitle">Field Summary</h3>
-              <div class="summary-zone-badge" id="summaryZoneBadge">
-                <span class="badge-dot"></span>
-                <span id="summaryZoneTag">ZONE C · NUTRIENT-STRESS CLUE</span>
-              </div>
+              <span class="summary-zone-pill" id="summaryZonePill">Zone C</span>
             </div>
 
-            <!-- Dynamic Multilingual Summary Container (Rendered by script.js) -->
-            <div class="summary-panel-body" id="fieldSummaryContent" aria-live="polite">
-              <!-- Content generated dynamically -->
-            </div>
+            <!-- Subsection 1: Field Overview -->
+            <section class="summary-section" id="sumSecOverview">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">1</span>
+                <span data-i18n="sumSec1Title">Field Overview</span>
+              </h4>
+              <div class="summary-sec-content" id="sumOverviewContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
 
-            <div class="summary-panel-footer">
-              <button class="button button-dark button-small full-button" id="copySummaryBtn" type="button" data-i18n="btnCopySummary">
-                <span>📋</span> <span>Copy Advisory Summary</span>
+            <!-- Subsection 2: Observed Field Condition -->
+            <section class="summary-section" id="sumSecCondition">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">2</span>
+                <span data-i18n="sumSec2Title">Observed Field Condition</span>
+              </h4>
+              <div class="summary-sec-content" id="sumConditionContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 3: Recommended Next Steps -->
+            <section class="summary-section" id="sumSecSteps">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">3</span>
+                <span data-i18n="sumSec3Title">Recommended Next Steps</span>
+              </h4>
+              <div class="summary-sec-content" id="sumStepsContent">
+                <!-- Dynamically populated with numbered steps -->
+              </div>
+            </section>
+
+            <!-- Subsection 4: Irrigation and Moisture Guidance -->
+            <section class="summary-section" id="sumSecIrrigation">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">4</span>
+                <span data-i18n="sumSec4Title">Irrigation &amp; Moisture Guidance</span>
+              </h4>
+              <div class="summary-sec-content" id="sumIrrigationContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 5: Fertilizer and Soil Testing Guidance -->
+            <section class="summary-section" id="sumSecFertilizer">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">5</span>
+                <span data-i18n="sumSec5Title">Fertilizer &amp; Soil Testing Guidance</span>
+              </h4>
+              <div class="summary-sec-content" id="sumFertilizerContent">
+                <!-- Dynamically populated with clear N-P-K reminder -->
+              </div>
+            </section>
+
+            <!-- Subsection 6: Pest and Disease Inspection -->
+            <section class="summary-section" id="sumSecPest">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">6</span>
+                <span data-i18n="sumSec6Title">Pest &amp; Disease Inspection</span>
+              </h4>
+              <div class="summary-sec-content" id="sumPestContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Subsection 7: When to Contact a Local Agricultural Expert -->
+            <section class="summary-section" id="sumSecExpert">
+              <h4 class="summary-sec-title">
+                <span class="sec-num">7</span>
+                <span data-i18n="sumSec7Title">When to Contact an Expert</span>
+              </h4>
+              <div class="summary-sec-content" id="sumExpertContent">
+                <!-- Dynamically populated -->
+              </div>
+            </section>
+
+            <!-- Actions inside Left Panel -->
+            <div class="summary-actions">
+              <button type="button" class="button button-lime full-button" id="downloadSummaryBtn" data-i18n="btnDownloadSummary">
+                Download Summary Page ↓
               </button>
-              <p class="summary-disclaimer" data-i18n="summaryDisclaimer">
-                *Illustrative demo advisory. Not a clinical laboratory report. Confirm with KVK / qualified agronomist before input application.
-              </p>
+              <div class="summary-sub-actions">
+                <a class="button button-outline" href="#assistant" data-i18n="btnAskAssistant">Ask Farmer Friend ↗</a>
+              </div>
             </div>
           </aside>
 
-          <!-- RIGHT MAIN CONTENT: Interactive Maps, Simulated Satellite, and Validation Flow -->
-          <div class="report-main-content">
-            <article class="report-map-card">
+          <!-- RIGHT-SIDE INTERACTIVE INTEL & MAPS -->
+          <div class="report-intel-column">
+            <!-- 1. Google Map & Live Location Card -->
+            <article class="report-map-card" id="reportMapCard">
               <div class="report-map-head">
                 <div>
-                  <small>FIELD ID · KV-DEMO-014</small>
-                  <h3 data-i18n="repMapHead">North Plot — Zone Map</h3>
+                  <small>FIELD LOCATION · GEO-INTELLIGENCE</small>
+                  <h3 id="reportMapHead" data-i18n="repMapHead">Plot Location &amp; Satellite Coordinates</h3>
                 </div>
-                <!-- View Switcher Tabs: Satellite Overlay vs Google Map Location -->
-                <div class="map-view-switcher" role="tablist" aria-label="Map view mode">
-                  <button type="button" class="view-tab-btn active" id="tabViewSatellite" role="tab" aria-selected="true">
-                    <span>🛰</span> <span data-i18n="tabSimSatellite">Simulated Satellite</span>
-                  </button>
-                  <button type="button" class="view-tab-btn" id="tabViewLocation" role="tab" aria-selected="false">
-                    <span>⌖</span> <span data-i18n="tabFarmLocation">Farm Location Map</span>
-                  </button>
-                </div>
+                <span class="map-mode-badge" id="mapModeBadge">Demo Map Mode</span>
               </div>
 
-              <!-- Location Toolbar: Geolocation & Manual Coordinate Input (Requirement 1) -->
-              <div class="report-location-toolbar">
-                <button class="button button-outline button-small" type="button" id="reportLiveLocationBtn">
-                  <span class="btn-icon">📍</span> <span data-i18n="btnLiveLocation">Use Live Location</span>
+              <!-- Location & Coordinates Control Bar -->
+              <div class="report-loc-bar">
+                <button type="button" class="button button-lime button-small" id="reportLiveLocationBtn" title="Detect GPS coordinates">
+                  <span class="gps-icon">⌖</span> <span data-i18n="btnLiveLocation">Use Live Location</span>
                 </button>
                 <div class="report-coord-inputs">
-                  <label>
-                    <span data-i18n="lblLat">Lat:</span>
-                    <input id="reportLatInput" type="number" step="0.0001" min="-90" max="90" value="28.6692" aria-label="Latitude">
+                  <label class="coord-field">
+                    <span>Lat:</span>
+                    <input type="number" id="reportLatInput" step="0.0001" min="-90" max="90" placeholder="28.6692" value="28.6692">
                   </label>
-                  <label>
-                    <span data-i18n="lblLng">Lng:</span>
-                    <input id="reportLngInput" type="number" step="0.0001" min="-180" max="180" value="77.4538" aria-label="Longitude">
+                  <label class="coord-field">
+                    <span>Lng:</span>
+                    <input type="number" id="reportLngInput" step="0.0001" min="-180" max="180" placeholder="77.4538" value="77.4538">
                   </label>
-                  <button class="button button-small button-dark" id="reportUpdateCoordsBtn" type="button" data-i18n="btnUpdateCoords">Update ↵</button>
+                  <button type="button" class="button button-dark button-small" id="reportApplyCoordsBtn" data-i18n="btnSetCoords">Set</button>
                 </div>
               </div>
-              <div class="report-location-msg" id="reportLocationMsg" aria-live="polite"></div>
+              <div class="report-loc-status" id="reportLocStatus" role="status">
+                Click "Use Live Location" or enter coordinates manually.
+              </div>
 
-              <!-- Map Visual Views -->
-              <div class="report-visual-wrapper">
-                <!-- VIEW A: Simulated Thermal / Vegetation-Stress Overlay (Requirement 3) -->
-                <div class="report-view-pane active" id="reportSatelliteView" role="tabpanel">
-                  <div class="demo-satellite-banner">
-                    <span class="banner-pulse"></span>
-                    <strong data-i18n="demoSatelliteBannerText">DEMO SATELLITE / SIMULATED FIELD DATA — NOT LIVE IMAGERY</strong>
+              <!-- Map Container: Google Map + Fallback Map -->
+              <div class="report-map-container" id="reportMapContainer">
+                <div id="reportGoogleMap" class="report-google-map" style="display:none;"></div>
+                
+                <div id="reportDemoMapFallback" class="report-fallback-map">
+                  <div class="fallback-map-grid" id="fallbackMapGrid" title="Click anywhere on the field to place marker">
+                    <div class="fallback-satellite-texture"></div>
+                    <div class="fallback-crosshair-lines"></div>
+                    <div class="fallback-marker" id="fallbackMapMarker" style="left:52%; top:48%;">
+                      <div class="marker-pulse"></div>
+                      <div class="marker-pin">📍</div>
+                      <div class="marker-tooltip" id="fallbackMarkerTooltip">28.6692° N, 77.4538° E</div>
+                    </div>
                   </div>
-                  <div class="report-map simulated-satellite-map">
-                    <div class="report-field-pattern"></div>
-                    <button class="report-zone rz-a" data-zone="A" aria-label="Select zone A">A</button>
-                    <button class="report-zone rz-b" data-zone="B" aria-label="Select zone B">B</button>
-                    <button class="report-zone rz-c selected" data-zone="C" aria-pressed="true" aria-label="Select zone C">C</button>
-                    <button class="report-zone rz-d" data-zone="D" aria-label="Select zone D">D</button>
-                    <button class="report-zone rz-e" data-zone="E" aria-label="Select zone E">E</button>
-                    <button class="report-zone rz-f" data-zone="F" aria-label="Select zone F">F</button>
-                    <div class="map-label" data-i18n="simMapLabel">SIMULATED THERMAL &amp; VEGETATION-STRESS OVERLAY</div>
-                  </div>
-                  <div class="satellite-legend">
-                    <span><i class="sim-cool"></i> <span data-i18n="legCoolMoist">Cooler / Higher Moisture</span></span>
-                    <span><i class="sim-stable"></i> <span data-i18n="legStableVigour">Stable Vigour</span></span>
-                    <span><i class="sim-nutrient"></i> <span data-i18n="legNutrientClue">Nutrient-Stress Clue</span></span>
-                    <span><i class="sim-thermal"></i> <span data-i18n="legStressAnomaly">Thermal / Stress Anomaly</span></span>
-                  </div>
-                </div>
-
-                <!-- VIEW B: Interactive Google Map / Demo Fallback Location Map (Requirement 1) -->
-                <div class="report-view-pane" id="reportLocationMapView" role="tabpanel">
-                  <div class="google-map-container" id="reportGoogleMap" aria-label="Farm Location Map">
-                    <!-- Google Map SDK or Interactive Demo Fallback injected here -->
-                  </div>
-                  <div class="gmap-demo-notice" id="gmapDemoNotice">
-                    <span>ⓘ</span>
-                    <p data-i18n="gmapNotice">
-                      <strong>Demo Map Mode:</strong> Click or drag the marker to adjust coordinates. To connect live Google Maps satellite tiles, configure <code>GOOGLE_MAPS_API_KEY</code> in <code>config.js</code>.
-                    </p>
+                  <div class="fallback-api-notice">
+                    <span class="notice-icon">ℹ️</span>
+                    <div class="notice-text">
+                      <strong data-i18n="fallbackTitle">Interactive Demo Fallback Map</strong>
+                      <small data-i18n="fallbackDesc">A valid Google Maps API key is required for live satellite imagery tiles. Click map or "Use Live Location" to interactively update coordinates.</small>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -769,55 +817,191 @@
               </div>
             </article>
 
-            <!-- Report Status and Zone Details Card -->
-            <div class="report-details">
+            <!-- 2. Thermal-Style Field Visualization Card -->
+            <article class="thermal-map-card" id="reportThermalCard">
+              <div class="thermal-card-head">
+                <div>
+                  <small>SIMULATED SATELLITE BAND COMPOSITE</small>
+                  <h3 data-i18n="thermalCardTitle">Thermal &amp; Vegetation Stress Map</h3>
+                </div>
+                <span class="thermal-disclaimer-pill">SIMULATED DATA</span>
+              </div>
+
+              <!-- Thermal Heatmap Canvas / View -->
+              <div class="thermal-map-view" id="reportThermalMap">
+                <div class="thermal-gradient-bg"></div>
+                <div class="thermal-scanline"></div>
+                
+                <!-- Zone Buttons with Live Priority Color Badges -->
+                <div class="thermal-zones-layer" aria-label="Field Zones">
+                  <button type="button" class="report-zone thermal-zone rz-a" data-zone="A">
+                    <span class="zone-letter">A</span>
+                    <span class="zone-mini-tag">Vigour</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-b" data-zone="B">
+                    <span class="zone-letter">B</span>
+                    <span class="zone-mini-tag">Moisture</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-c selected" data-zone="C" aria-pressed="true">
+                    <span class="zone-letter">C</span>
+                    <span class="zone-mini-tag">Nutrient?</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-d" data-zone="D">
+                    <span class="zone-letter">D</span>
+                    <span class="zone-mini-tag">Watch</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-e" data-zone="E">
+                    <span class="zone-letter">E</span>
+                    <span class="zone-mini-tag">Stress</span>
+                  </button>
+                  <button type="button" class="report-zone thermal-zone rz-f" data-zone="F">
+                    <span class="zone-letter">F</span>
+                    <span class="zone-mini-tag">Stable</span>
+                  </button>
+                </div>
+
+                <div class="thermal-legend-bar">
+                  <div class="legend-scale">
+                    <span class="scale-color sc-green"></span><span>High Vigour</span>
+                    <span class="scale-color sc-yellow"></span><span>Moisture Deficit</span>
+                    <span class="scale-color sc-red"></span><span>Nutrient Clue</span>
+                    <span class="scale-color sc-orange"></span><span>Stress / Pests</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="thermal-disclaimer-banner">
+                <span class="disclaimer-icon">⚠️</span>
+                <span>DEMO SATELLITE / SIMULATED FIELD DATA — NOT LIVE SATELLITE IMAGERY.</span>
+              </div>
+
+              <!-- Active Zone Details Strip -->
               <div class="report-status">
                 <span class="status-symbol">!</span>
                 <div>
                   <small id="reportZoneTag">ZONE C · NUTRIENT-STRESS CLUE</small>
                   <h3 id="reportZoneTitle">Soil testing recommended</h3>
                   <p id="reportZoneDesc">
-                    Crop vigour here differs from nearby zones. Nutrient stress is only one possible cause: inspect the crop, then collect a soil sample. No mineral nutrient value is measured or inferred directly from satellite imagery.
+                    Crop vigour here differs from nearby zones. Nutrient stress is only one possible cause: inspect the
+                    crop, then collect a soil sample. No mineral nutrient value is measured or inferred directly from
+                    satellite imagery.
                   </p>
                 </div>
               </div>
+
+              <!-- Quick stats grid -->
               <div class="report-stats">
                 <div><small data-i18n="statCrop">Crop</small><strong id="reportCrop">Wheat (गेहूँ)</strong></div>
                 <div><small data-i18n="statStage">Crop stage</small><strong data-i18n="statStageVal">Tillering · sample</strong></div>
                 <div><small data-i18n="statWeather">Weather context</small><strong>29°C · partly cloudy*</strong></div>
                 <div><small data-i18n="statMoisture">Surface moisture</small><strong data-i18n="statMoistVal">Verify at root depth</strong></div>
               </div>
-              <div class="validation-box">
-                <div class="validation-icon">✓</div>
-                <div>
-                  <strong data-i18n="valBoxTitle">Validate before recommending nutrients</strong>
-                  <p data-i18n="valBoxDesc">
-                    Collect a representative soil sample and consult a local agronomist. Satellite patterns flag clues—they are not direct N–P–K measurements.
-                  </p>
-                </div>
-              </div>
+            </article>
 
-              <!-- Validation Gate Flow demonstrating Field -> Report -> Validation -> Advisory -> Hub -->
-              <div class="flow-panel" id="validationPanel">
-                <strong data-i18n="flowTitle">Soil Validation → Advisory Flow (Demo)</strong>
-                <div class="flow-steps" role="group" aria-label="Soil test status">
-                  <button type="button" class="flow-btn" data-soil="none" data-i18n="soilNone">1 · Soil test not done</button>
-                  <button type="button" class="flow-btn" data-soil="sent" data-i18n="soilSent">2 · Sample sent to lab</button>
-                  <button type="button" class="flow-btn active" data-soil="result" data-i18n="soilResult">3 · Lab result received (demo)</button>
-                </div>
-                <p class="advisory-text" id="advisoryText" aria-live="polite"></p>
-                <a class="button button-lime full-button" id="goHub" href="#hub" data-i18n="goHub">Explore natural fertilizer options ↗</a>
-              </div>
-
-              <!-- Report Action Buttons (Replaced old download button with quick actions) -->
-              <div class="report-actions">
-                <button class="button button-dark" id="btnShareSummary" type="button" data-i18n="btnShareSummary">📋 Copy Advisory Summary</button>
-                <a class="button button-outline" href="#assistant" data-i18n="btnAskAssistant">Ask Farmer Friend ↗</a>
+            <!-- 3. Validation Box & Flow Panel (Preserved) -->
+            <div class="validation-box">
+              <div class="validation-icon">✓</div>
+              <div>
+                <strong data-i18n="valBoxTitle">Validate before recommending nutrients</strong>
+                <p data-i18n="valBoxDesc">
+                  Collect a representative soil sample and consult a local agronomist. Satellite patterns flag
+                  clues—they are not direct N–P–K measurements.
+                </p>
               </div>
             </div>
+
+            <div class="flow-panel" id="validationPanel">
+              <strong data-i18n="flowTitle">Soil Validation → Advisory Flow (Demo)</strong>
+              <div class="flow-steps" role="group" aria-label="Soil test status">
+                <button type="button" class="flow-btn" data-soil="none" data-i18n="soilNone">1 · Soil test not
+                  done</button>
+                <button type="button" class="flow-btn" data-soil="sent" data-i18n="soilSent">2 · Sample sent to
+                  lab</button>
+                <button type="button" class="flow-btn active" data-soil="result" data-i18n="soilResult">3 · Lab result
+                  received (demo)</button>
+              </div>
+              <div class="advisory-text-row">
+                <p class="advisory-text" id="advisoryText" aria-live="polite"></p>
+                <button type="button" class="advisory-voice-btn" id="speakSoilAdvisoryBtn" title="Listen to Soil Advisory">
+                  <span>🔊</span> <span data-i18n="voiceListenAdv">Listen</span>
+                </button>
+              </div>
+              <a class="button button-lime full-button" id="goHub" href="#hub" data-i18n="goHub">Explore natural
+                fertilizer options ↗</a>
+            </div>
+
+            <!-- 4. Multilingual Farmer Voice Advisory Card -->
+            <article class="voice-advisory-card" id="voiceAdvisoryCard">
+              <div class="voice-card-head">
+                <div class="voice-title-wrap">
+                  <span class="voice-icon-pulse">🎙️</span>
+                  <div>
+                    <h3 id="voiceCardTitle" data-i18n="voiceCardTitle">Listen to Farmer Advice / किसान की सलाह सुनें</h3>
+                    <small data-i18n="voiceCardSub">Interactive Text-to-Speech Advisory · 23 Indian Languages</small>
+                  </div>
+                </div>
+                <span class="voice-status-badge ready" id="voiceStatusBadge">Ready</span>
+              </div>
+
+              <div class="voice-controls-row">
+                <div class="voice-lang-picker">
+                  <label for="voiceLangSelect">
+                    <span class="globe-icon">🌐</span>
+                    <span data-i18n="voiceLangLabel">Voice Language:</span>
+                  </label>
+                  <select id="voiceLangSelect" title="Select Voice Advisory Language">
+                    <option value="en">English</option>
+                    <option value="hi" selected>हिन्दी (Hindi)</option>
+                    <option value="ur">اردو (Urdu)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                    <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                    <option value="as">অসমীয়া (Assamese)</option>
+                    <option value="mai">मैथिली (Maithili)</option>
+                    <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+                    <option value="ks">کٲشُر (Kashmiri)</option>
+                    <option value="ne">नेपाली (Nepali)</option>
+                    <option value="kok">कोंकणी (Konkani)</option>
+                    <option value="sd">سنڌي (Sindhi)</option>
+                    <option value="doi">डोगरी (Dogri)</option>
+                    <option value="brx">बड़ो (Bodo)</option>
+                    <option value="mni">মৈতৈলোন্ (Manipuri)</option>
+                    <option value="sa">संस्कृतम् (Sanskrit)</option>
+                  </select>
+                </div>
+
+                <div class="voice-btn-group">
+                  <button type="button" class="button button-lime button-small" id="voicePlayBtn" title="Play Advisory">
+                    <span>▶</span> <span data-i18n="voicePlay">Listen</span>
+                  </button>
+                  <button type="button" class="button button-outline button-small" id="voicePauseBtn" title="Pause Advisory" disabled>
+                    <span>⏸</span> <span data-i18n="voicePause">Pause</span>
+                  </button>
+                  <button type="button" class="button button-outline button-small" id="voiceResumeBtn" title="Resume Advisory" style="display:none;">
+                    <span>⏯</span> <span data-i18n="voiceResume">Resume</span>
+                  </button>
+                  <button type="button" class="button button-dark button-small" id="voiceStopBtn" title="Stop Advisory" disabled>
+                    <span>⏹</span> <span data-i18n="voiceStop">Stop</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Spoken transcript viewer -->
+              <div class="voice-transcript-box" id="voiceTranscriptBox" aria-live="polite">
+                <span class="transcript-prefix">🔊 Live Voice Text:</span>
+                <p id="voiceTranscriptText">Click "Listen" to hear voice advisory for the selected zone.</p>
+              </div>
+            </article>
           </div>
         </div>
-        <p class="tiny-note" data-i18n="reportDisclaimerNote">*Weather is illustrative demo content. No live satellite, weather, or soil-test API is connected.</p>
+        <p class="tiny-note" data-i18n="reportDisclaimerNote">*Weather is illustrative demo content. No live satellite,
+          weather, or soil-test API is connected.</p>
       </div>
     </section>
 
@@ -852,6 +1036,9 @@
               <small><span class="online-dot"></span> <span data-i18n="botStatus">Demo assistant · Multilingual rule
                   engine</span></small>
             </div>
+            <button id="botVoiceToggle" class="chat-voice-toggle" type="button" title="Toggle Auto Voice" aria-pressed="true">
+              <span class="voice-toggle-icon">🔊</span> <span class="voice-toggle-label" data-i18n="voiceToggleOn">Voice ON</span>
+            </button>
             <button id="clearChat" class="chat-clear" type="button" title="Clear chat">↻</button>
           </div>
           <div class="chat-messages" id="chatMessages" aria-live="polite">
@@ -862,7 +1049,12 @@
                 <p id="chatGreeting" data-i18n="chatGreeting">Namaste! 🌱 I’m your demo Farmer Friend. Tell me what
                   you’re noticing in your field (e.g. Zone B moisture, Zone C nutrient clues, irrigation timing, or soil
                   testing), and I’ll suggest a sensible next step.</p>
-                <small>11:20 AM · DEMO</small>
+                <div class="bubble-foot">
+                  <small>11:20 AM · DEMO</small>
+                  <button type="button" class="bubble-speak-btn" id="initialGreetingSpeakBtn" title="Listen to advice">
+                    <span>🔊</span> <span class="speak-label">Listen</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -883,6 +1075,9 @@
           <form class="chat-input-row" id="chatForm">
             <input id="chatInput" placeholder="Ask about your field (e.g. Zone C, soil test, watering)..."
               autocomplete="off" required>
+            <button type="button" id="chatMicBtn" class="chat-mic-btn" title="Speak question to Adviser (Microphone)" aria-label="Speak question with microphone">
+              🎙️
+            </button>
             <button aria-label="Send message" type="submit">↑</button>
           </form>
           <div class="chat-footnote" data-i18n="chatFootnote">
