@@ -163,15 +163,20 @@
     if ($("#reportZoneTitle")) $("#reportZoneTitle").textContent = data.hint;
     if ($("#reportZoneDesc")) $("#reportZoneDesc").textContent = data.detail;
 
-    // Refresh Field Summary Panel (Requirement 2)
+    // Update Field Summary Panel
     if (typeof renderFieldSummary === "function") {
-      renderFieldSummary(currentLang);
+      renderFieldSummary();
+    }
+
+    // Update Voice Advisory text
+    if (typeof updateVoiceTranscript === "function") {
+      updateVoiceTranscript();
     }
   }
 
   $$("[data-zone]").forEach(el => el.addEventListener("click", () => updateZone(el.dataset.zone)));
 
-  // Coordinate Formatting & Display Helper (Bidirectional Sync across site)
+  // Coordinate Formatting & Display Helper
   function setCoords(lat, lng) {
     const f = v => Math.abs(Number(v)).toFixed(4);
     const ns = lat >= 0 ? "N" : "S";
@@ -179,26 +184,15 @@
     const coordsStr = `${f(lat)}° ${ns}, ${f(lng)}° ${ew}`;
     if ($("#heroCoords")) $("#heroCoords").textContent = coordsStr;
     if ($("#reportCoords")) $("#reportCoords").textContent = `${f(lat)}° ${ns} · ${f(lng)}° ${ew}`;
-
-    activeFarmer.latitude = String(lat);
-    activeFarmer.longitude = String(lng);
-
-    const latIn = $("#reportLatInput");
-    const lngIn = $("#reportLngInput");
-    if (latIn && document.activeElement !== latIn) latIn.value = Number(lat).toFixed(4);
-    if (lngIn && document.activeElement !== lngIn) lngIn.value = Number(lng).toFixed(4);
-
-    const regLat = $("#latitude");
-    const regLng = $("#longitude");
-    if (regLat && document.activeElement !== regLat) regLat.value = Number(lat).toFixed(6);
-    if (regLng && document.activeElement !== regLng) regLng.value = Number(lng).toFixed(6);
-
-    if (typeof updateMapMarker === "function") {
-      updateMapMarker(lat, lng);
+    if ($("#fallbackMarkerTooltip")) $("#fallbackMarkerTooltip").textContent = `${f(lat)}° ${ns}, ${f(lng)}° ${ew}`;
+    if ($("#reportLatInput") && document.activeElement !== $("#reportLatInput")) {
+      $("#reportLatInput").value = Number(lat).toFixed(4);
     }
-
+    if ($("#reportLngInput") && document.activeElement !== $("#reportLngInput")) {
+      $("#reportLngInput").value = Number(lng).toFixed(4);
+    }
     if (typeof renderFieldSummary === "function") {
-      renderFieldSummary(currentLang);
+      renderFieldSummary();
     }
   }
 
@@ -380,840 +374,1045 @@
     });
   }
 
-  // Map Controller, Geolocation & Interactive Fallback Map (Requirement 1)
+  // ============================================================
+  // ENHANCED SOIL REPORTS: GOOGLE MAPS, LIVE LOCATION, FIELD SUMMARY,
+  // DOWNLOAD SUMMARY PAGE & MULTILINGUAL VOICE ADVISORY
+  // ============================================================
+
+  // 1. Google Maps API Key Extractor
+  function getGoogleMapsApiKey() {
+    const cfg = window.KRISHIVED_CONFIG && window.KRISHIVED_CONFIG.GOOGLE_MAPS_API_KEY;
+    if (!cfg || typeof cfg !== "string") return "";
+    if (cfg.includes("https://maps.googleapis.com/maps/api/js?key=INSERT_YOUR_API_KEY&callback=initMap&libraries=marker&v=beta&solution_channel=GMP_CCS_reversegeocoding_v3")) return "";
+    if (cfg.startsWith("http://") || cfg.startsWith("https://")) {
+      try {
+        const url = new URL(cfg);
+        const k = url.searchParams.get("key");
+        return (k && k !== "https://maps.googleapis.com/maps/api/js?key=INSERT_YOUR_API_KEY&callback=initMap&libraries=marker&v=beta&solution_channel=GMP_CCS_reversegeocoding_v3") ? k : "";
+      } catch {
+        return "";
+      }
+    }
+    return cfg.trim();
+  }
+
+  // Map state
   let googleMapInstance = null;
   let googleMapMarker = null;
-  let isGoogleMapsInitialized = false;
-
-  function initFarmMap() {
-    const mapContainer = $("#reportGoogleMap");
-    if (!mapContainer) return;
-
-    const apiKey = (window.KRISHIVED_CONFIG && window.KRISHIVED_CONFIG.GOOGLE_MAPS_API_KEY)
-      ? window.KRISHIVED_CONFIG.GOOGLE_MAPS_API_KEY.trim()
-      : "";
-
-    if (apiKey) {
-      loadGoogleMapsScript(apiKey);
-    } else {
-      initInteractiveFallbackMap();
-    }
-  }
-
-  function loadGoogleMapsScript(key) {
-    if (window.google && window.google.maps) {
-      setupGoogleMap();
-      return;
-    }
-    window.initKrishiVedGoogleMap = () => {
-      setupGoogleMap();
-    };
-    window.gm_authFailure = () => {
-      console.warn("Google Maps auth failure. Reverting to interactive demo map.");
-      initInteractiveFallbackMap();
-      setLocationMsg("Google Maps key unauthorized. Showing interactive demo map.", "error");
-    };
-
-    const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&callback=initKrishiVedGoogleMap`;
-    s.async = true;
-    s.defer = true;
-    s.onerror = () => {
-      console.warn("Failed to load Google Maps script. Using fallback map.");
-      initInteractiveFallbackMap();
-    };
-    document.head.appendChild(s);
-  }
-
-  function setupGoogleMap() {
-    const container = $("#reportGoogleMap");
-    if (!container || !window.google || !window.google.maps) return;
-
-    const lat = +activeFarmer.latitude || 28.6692;
-    const lng = +activeFarmer.longitude || 77.4538;
-    const center = { lat, lng };
-
-    googleMapInstance = new google.maps.Map(container, {
-      center,
-      zoom: 15,
-      mapTypeId: "hybrid",
-      mapTypeControl: true,
-      streetViewControl: false,
-      fullscreenControl: true
-    });
-
-    googleMapMarker = new google.maps.Marker({
-      position: center,
-      map: googleMapInstance,
-      draggable: true,
-      title: activeFarmer.name || "Farm Location",
-      animation: google.maps.Animation.DROP
-    });
-
-    googleMapMarker.addListener("dragend", e => {
-      const newLat = e.latLng.lat();
-      const newLng = e.latLng.lng();
-      setCoords(newLat, newLng);
-      setLocationMsg(`Coordinates updated from map marker: ${newLat.toFixed(4)}, ${newLng.toFixed(4)}`, "success");
-    });
-
-    googleMapInstance.addListener("click", e => {
-      const newLat = e.latLng.lat();
-      const newLng = e.latLng.lng();
-      googleMapMarker.setPosition(e.latLng);
-      setCoords(newLat, newLng);
-      setLocationMsg(`Coordinates updated from map click: ${newLat.toFixed(4)}, ${newLng.toFixed(4)}`, "success");
-    });
-
-    isGoogleMapsInitialized = true;
-    const notice = $("#gmapDemoNotice");
-    if (notice) {
-      notice.innerHTML = `<span>✓</span><p><strong>Google Maps Connected:</strong> Live hybrid satellite tiles active. Drag marker or click map to reposition field.</p>`;
-    }
-  }
-
-  function initInteractiveFallbackMap() {
-    const container = $("#reportGoogleMap");
-    if (!container) return;
-
-    container.innerHTML = `
-      <div class="fallback-map-canvas" id="fallbackMapCanvas" title="Click anywhere or drag pin to position farm location">
-        <div class="fallback-contour" style="inset: 12% 16%;"></div>
-        <div class="fallback-contour" style="inset: 26% 32%;"></div>
-        <div class="fallback-contour" style="inset: 42% 48%;"></div>
-        <div class="fallback-helper-hint">📍 Farm Location Map · Click anywhere or drag pin</div>
-        <div class="fallback-map-pin" id="fallbackMapPin" style="left: 50%; top: 50%;" role="button" aria-label="Farm location marker" tabindex="0">
-          <div class="fallback-map-pulse"></div>
-          <svg width="34" height="42" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 18 12 18s12-9 12-18c0-6.63-5.37-12-12-12z" fill="#245836"/>
-            <circle cx="12" cy="11" r="5" fill="#b9e56b"/>
-            <circle cx="12" cy="11" r="2.5" fill="#173f2a"/>
-          </svg>
-        </div>
-        <div class="fallback-coords-badge" id="fallbackCoordsBadge">28.6692° N · 77.4538° E</div>
-      </div>
-    `;
-
-    const canvas = $("#fallbackMapCanvas");
-    const pin = $("#fallbackMapPin");
-
-    const baseLat = 28.6692;
-    const baseLng = 77.4538;
-    const span = 0.025; // ±0.025 degrees view area
-
-    function updateFromPoint(clientX, clientY) {
-      if (!canvas || !pin) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
-
-      const newLng = (baseLng - span) + x * (span * 2);
-      const newLat = (baseLat + span) - y * (span * 2);
-
-      pin.style.left = `${(x * 100).toFixed(1)}%`;
-      pin.style.top = `${(y * 100).toFixed(1)}%`;
-
-      setCoords(newLat, newLng);
-    }
-
-    let isDragging = false;
-
-    pin.addEventListener("mousedown", e => {
-      e.stopPropagation();
-      isDragging = true;
-      pin.classList.add("dragging");
-    });
-
-    window.addEventListener("mousemove", e => {
-      if (!isDragging) return;
-      updateFromPoint(e.clientX, e.clientY);
-    });
-
-    window.addEventListener("mouseup", () => {
-      if (isDragging) {
-        isDragging = false;
-        pin.classList.remove("dragging");
-        setLocationMsg(`✓ Coordinates updated: ${(+activeFarmer.latitude).toFixed(4)}, ${(+activeFarmer.longitude).toFixed(4)}`, "success");
-      }
-    });
-
-    // Touch support for mobile devices
-    pin.addEventListener("touchstart", e => {
-      e.stopPropagation();
-      isDragging = true;
-      pin.classList.add("dragging");
-    }, { passive: true });
-
-    window.addEventListener("touchmove", e => {
-      if (!isDragging || !e.touches[0]) return;
-      updateFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    window.addEventListener("touchend", () => {
-      if (isDragging) {
-        isDragging = false;
-        pin.classList.remove("dragging");
-        setLocationMsg(`✓ Coordinates updated: ${(+activeFarmer.latitude).toFixed(4)}, ${(+activeFarmer.longitude).toFixed(4)}`, "success");
-      }
-    });
-
-    // Clicking anywhere on the canvas places the pin directly
-    canvas.addEventListener("click", e => {
-      updateFromPoint(e.clientX, e.clientY);
-      setLocationMsg(`✓ Location selected: ${(+activeFarmer.latitude).toFixed(4)}, ${(+activeFarmer.longitude).toFixed(4)}`, "success");
-    });
-
-    updateFallbackPin(+activeFarmer.latitude || baseLat, +activeFarmer.longitude || baseLng);
-  }
+  let isGoogleMapsActive = false;
 
   function updateMapMarker(lat, lng) {
-    if (isGoogleMapsInitialized && googleMapMarker && googleMapInstance) {
+    if (isGoogleMapsActive && googleMapMarker && googleMapInstance) {
       const pos = { lat: Number(lat), lng: Number(lng) };
       googleMapMarker.setPosition(pos);
-      googleMapInstance.panTo(pos);
+      googleMapInstance.setCenter(pos);
     } else {
-      updateFallbackPin(lat, lng);
+      const marker = $("#fallbackMapMarker");
+      if (marker) {
+        marker.style.left = "50%";
+        marker.style.top = "50%";
+      }
     }
   }
 
-  function updateFallbackPin(lat, lng) {
-    const pin = $("#fallbackMapPin");
-    const badge = $("#fallbackCoordsBadge");
-    if (!pin) return;
+  function initReportMap() {
+    const mapContainer = $("#reportGoogleMap");
+    const fallbackContainer = $("#reportDemoMapFallback");
+    const badge = $("#mapModeBadge");
+    const status = $("#reportLocStatus");
+    const key = getGoogleMapsApiKey();
 
-    const baseLat = 28.6692;
-    const baseLng = 77.4538;
-    const span = 0.025;
+    const currentLat = parseFloat(activeFarmer.latitude) || 28.6692;
+    const currentLng = parseFloat(activeFarmer.longitude) || 77.4538;
 
-    const x = Math.max(6, Math.min(94, ((+lng - (baseLng - span)) / (span * 2)) * 100));
-    const y = Math.max(10, Math.min(90, (((baseLat + span) - +lat) / (span * 2)) * 100));
+    if (key) {
+      if (status) status.textContent = "Connecting to Google Maps satellite imagery…";
+      const scriptId = "googleMapsApiScript";
+      if (!document.getElementById(scriptId)) {
+        window.gm_authFailure = () => {
+          console.warn("KrishiVed: Google Maps authentication failure. Switched to interactive demo map.");
+          activateFallbackMap("Google Maps API key rejected. Switched to interactive demo map.");
+        };
 
-    pin.style.left = `${x.toFixed(1)}%`;
-    pin.style.top = `${y.toFixed(1)}%`;
+        const script = document.createElement("script");
+        script.id = scriptId;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&libraries=marker&v=beta`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          if (window.google && window.google.maps) {
+            mountGoogleMap(currentLat, currentLng);
+          } else {
+            activateFallbackMap("Google Maps library unavailable. Interactive demo map active.");
+          }
+        };
+        script.onerror = () => {
+          activateFallbackMap("Could not connect to Google Maps servers. Interactive demo map active.");
+        };
+        document.head.appendChild(script);
+      } else if (window.google && window.google.maps) {
+        mountGoogleMap(currentLat, currentLng);
+      }
+    } else {
+      activateFallbackMap("Demo mode: Valid Google Maps API key required for live tiles. Interactive pin & GPS active.");
+    }
 
-    if (badge) {
-      const ns = +lat >= 0 ? "N" : "S";
-      const ew = +lng >= 0 ? "E" : "W";
-      badge.textContent = `${Math.abs(+lat).toFixed(4)}° ${ns} · ${Math.abs(+lng).toFixed(4)}° ${ew}`;
+    function mountGoogleMap(lat, lng) {
+      try {
+        if (!mapContainer) return;
+        mapContainer.style.display = "block";
+        if (fallbackContainer) fallbackContainer.style.display = "none";
+
+        googleMapInstance = new google.maps.Map(mapContainer, {
+          center: { lat, lng },
+          zoom: 15,
+          mapTypeId: "hybrid",
+          streetViewControl: false,
+          mapTypeControl: true,
+          fullscreenControl: false
+        });
+
+        googleMapMarker = new google.maps.Marker({
+          position: { lat, lng },
+          map: googleMapInstance,
+          draggable: true,
+          title: "KrishiVed Field Center"
+        });
+
+        // Click map to select location
+        googleMapInstance.addListener("click", e => {
+          const newLat = e.latLng.lat();
+          const newLng = e.latLng.lng();
+          handleLocationUpdate(newLat, newLng, "Selected via map click");
+        });
+
+        // Drag marker to select location
+        googleMapMarker.addListener("dragend", e => {
+          const newLat = e.latLng.lat();
+          const newLng = e.latLng.lng();
+          handleLocationUpdate(newLat, newLng, "Marker moved to new plot coordinates");
+        });
+
+        isGoogleMapsActive = true;
+        if (badge) {
+          badge.textContent = "Google Maps Satellite (Live)";
+          badge.classList.add("live");
+        }
+        if (status) {
+          status.textContent = "Live Google Maps active. Click or drag marker to reposition.";
+          status.className = "report-loc-status success";
+        }
+      } catch (err) {
+        console.warn("Failed to mount Google Maps:", err);
+        activateFallbackMap("Error mounting Google Maps. Interactive demo map active.");
+      }
+    }
+
+    function activateFallbackMap(reasonText) {
+      isGoogleMapsActive = false;
+      if (mapContainer) mapContainer.style.display = "none";
+      if (fallbackContainer) fallbackContainer.style.display = "flex";
+      if (badge) {
+        badge.textContent = "Demo Map Mode";
+        badge.classList.remove("live");
+      }
+      if (status) {
+        status.textContent = reasonText;
+        status.className = "report-loc-status";
+      }
+
+      // Interactive click on fallback map grid
+      const grid = $("#fallbackMapGrid");
+      if (grid && !grid.dataset.bound) {
+        grid.dataset.bound = "true";
+        grid.addEventListener("click", e => {
+          const rect = grid.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const pctX = Math.max(10, Math.min(90, (x / rect.width) * 100));
+          const pctY = Math.max(10, Math.min(90, (y / rect.height) * 100));
+
+          const marker = $("#fallbackMapMarker");
+          if (marker) {
+            marker.style.left = `${pctX.toFixed(1)}%`;
+            marker.style.top = `${pctY.toFixed(1)}%`;
+          }
+
+          // Offset around current base coordinates
+          const baseLat = parseFloat(activeFarmer.latitude) || 28.6692;
+          const baseLng = parseFloat(activeFarmer.longitude) || 77.4538;
+          const deltaLat = ((50 - pctY) * 0.0006);
+          const deltaLng = ((pctX - 50) * 0.0006);
+          const newLat = +(baseLat + deltaLat).toFixed(4);
+          const newLng = +(baseLng + deltaLng).toFixed(4);
+
+          handleLocationUpdate(newLat, newLng, "Interactive demo map position updated");
+        });
+      }
     }
   }
 
-  function setLocationMsg(text, type = "info") {
-    const msg = $("#reportLocationMsg");
-    if (!msg) return;
-    msg.textContent = text;
-    msg.className = `report-location-msg active ${type}`;
-    if (type === "success") {
-      setTimeout(() => {
-        if (msg.textContent === text) msg.classList.remove("active");
-      }, 5000);
+  function handleLocationUpdate(lat, lng, statusMsg) {
+    activeFarmer.latitude = Number(lat).toFixed(6);
+    activeFarmer.longitude = Number(lng).toFixed(6);
+
+    const latInput = $("#reportLatInput");
+    const lngInput = $("#reportLngInput");
+    if (latInput && document.activeElement !== latInput) latInput.value = Number(lat).toFixed(4);
+    if (lngInput && document.activeElement !== lngInput) lngInput.value = Number(lng).toFixed(4);
+
+    setCoords(lat, lng);
+    updateMapMarker(lat, lng);
+    renderFieldSummary();
+    if (typeof updateVoiceTranscript === "function") updateVoiceTranscript();
+
+    const status = $("#reportLocStatus");
+    if (status) {
+      status.textContent = `✓ ${statusMsg}: ${Number(lat).toFixed(4)}° N, ${Number(lng).toFixed(4)}° E`;
+      status.className = "report-loc-status success";
     }
   }
 
-  // "Use Live Location" Button in Soil Report Location Toolbar (Requirement 1)
-  if ($("#reportLiveLocationBtn")) {
-    $("#reportLiveLocationBtn").addEventListener("click", () => {
+  // Location Controls Setup: "Use Live Location" Button
+  const liveLocationBtn = $("#reportLiveLocationBtn");
+  if (liveLocationBtn) {
+    liveLocationBtn.addEventListener("click", () => {
+      const status = $("#reportLocStatus");
       if (!navigator.geolocation) {
-        setLocationMsg("Geolocation is not supported by your browser. Please type coordinates manually.", "error");
-        notify("Geolocation not supported.");
+        if (status) {
+          status.textContent = "Geolocation is not supported by your browser. Please enter coordinates manually.";
+          status.className = "report-loc-status error";
+        }
+        notify("Geolocation not supported by browser.");
         return;
       }
 
-      setLocationMsg("Requesting browser GPS permission…", "loading");
-      notify("Requesting GPS coordinates…");
+      if (status) {
+        status.textContent = "Acquiring high-precision device GPS fix…";
+        status.className = "report-loc-status";
+      }
 
       navigator.geolocation.getCurrentPosition(
         pos => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           const acc = Math.round(pos.coords.accuracy);
-
-          setCoords(lat, lng);
-          setLocationMsg(`✓ Live location captured (±${acc} m accuracy). Map and advisory updated.`, "success");
-          notify(`GPS location locked (±${acc} m).`);
+          handleLocationUpdate(lat, lng, `Live GPS position verified (±${acc} m accuracy)`);
+          notify("Soil report updated with live device location.");
         },
         err => {
-          let errText = "Could not retrieve location. Please enter coordinates manually.";
-          if (err.code === 1) {
-            errText = "Location permission denied. Please allow location access or type coordinates manually.";
-          } else if (err.code === 2) {
-            errText = "Position unavailable. Please type coordinates manually.";
-          } else if (err.code === 3) {
-            errText = "GPS request timed out. Please try again or type coordinates manually.";
+          let errText = "GPS request timed out. Enter coordinates manually.";
+          if (err.code === 1) errText = "Location access denied. Please allow GPS permission or enter coordinates manually.";
+          else if (err.code === 2) errText = "GPS position unavailable. Please enter coordinates manually.";
+          if (status) {
+            status.textContent = errText;
+            status.className = "report-loc-status error";
           }
-          setLocationMsg(errText, "error");
-          notify("GPS access unavailable. Enter coordinates manually.");
+          notify(errText);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
     });
   }
 
-  // Coordinate Manual Input Handlers (Requirement 1)
-  function applyManualCoordinates() {
-    const latIn = $("#reportLatInput");
-    const lngIn = $("#reportLngInput");
-    if (!latIn || !lngIn) return;
+  // Apply Manual Coordinates
+  function applyManualCoords() {
+    const latInput = $("#reportLatInput");
+    const lngInput = $("#reportLngInput");
+    const status = $("#reportLocStatus");
+    if (!latInput || !lngInput) return;
 
-    const latVal = latIn.value.trim();
-    const lngVal = lngIn.value.trim();
+    const lat = parseFloat(latInput.value);
+    const lng = parseFloat(lngInput.value);
 
-    if (!latVal || !lngVal || isNaN(+latVal) || isNaN(+lngVal)) {
-      setLocationMsg("Please enter valid numeric values for both Latitude and Longitude.", "error");
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      if (status) {
+        status.textContent = "Error: Latitude must be a valid number between -90 and 90.";
+        status.className = "report-loc-status error";
+      }
+      notify("Invalid Latitude. Must be between -90 and 90.");
+      latInput.focus();
       return;
     }
 
-    const lat = +latVal;
-    const lng = +lngVal;
-
-    if (lat < -90 || lat > 90) {
-      setLocationMsg("Invalid Latitude: value must be between -90.0000 and +90.0000.", "error");
-      latIn.focus();
+    if (isNaN(lng) || lng < -180 || lng > 180) {
+      if (status) {
+        status.textContent = "Error: Longitude must be a valid number between -180 and 180.";
+        status.className = "report-loc-status error";
+      }
+      notify("Invalid Longitude. Must be between -180 and 180.");
+      lngInput.focus();
       return;
     }
 
-    if (lng < -180 || lng > 180) {
-      setLocationMsg("Invalid Longitude: value must be between -180.0000 and +180.0000.", "error");
-      lngIn.focus();
-      return;
-    }
-
-    setCoords(lat, lng);
-    setLocationMsg(`✓ Coordinates updated to ${lat.toFixed(4)}°, ${lng.toFixed(4)}°.`, "success");
-    notify("Farm coordinates updated.");
+    handleLocationUpdate(lat, lng, "Coordinates applied manually");
+    notify("Field coordinates updated.");
   }
 
-  if ($("#reportUpdateCoordsBtn")) {
-    $("#reportUpdateCoordsBtn").addEventListener("click", applyManualCoordinates);
+  if ($("#reportApplyCoordsBtn")) {
+    $("#reportApplyCoordsBtn").addEventListener("click", applyManualCoords);
   }
   if ($("#reportLatInput")) {
-    $("#reportLatInput").addEventListener("keydown", e => {
-      if (e.key === "Enter") applyManualCoordinates();
-    });
+    $("#reportLatInput").addEventListener("keydown", e => { if (e.key === "Enter") applyManualCoords(); });
   }
   if ($("#reportLngInput")) {
-    $("#reportLngInput").addEventListener("keydown", e => {
-      if (e.key === "Enter") applyManualCoordinates();
-    });
+    $("#reportLngInput").addEventListener("keydown", e => { if (e.key === "Enter") applyManualCoords(); });
   }
 
-  // Map View Switcher: Simulated Satellite vs Farm Location Map
-  const tabSat = $("#tabViewSatellite");
-  const tabLoc = $("#tabViewLocation");
-  const viewSat = $("#reportSatelliteView");
-  const viewLoc = $("#reportLocationMapView");
-
-  if (tabSat && tabLoc && viewSat && viewLoc) {
-    tabSat.addEventListener("click", () => {
-      tabSat.classList.add("active");
-      tabSat.setAttribute("aria-selected", "true");
-      tabLoc.classList.remove("active");
-      tabLoc.setAttribute("aria-selected", "false");
-      viewSat.classList.add("active");
-      viewLoc.classList.remove("active");
-    });
-
-    tabLoc.addEventListener("click", () => {
-      tabLoc.classList.add("active");
-      tabLoc.setAttribute("aria-selected", "true");
-      tabSat.classList.remove("active");
-      tabSat.setAttribute("aria-selected", "false");
-      viewLoc.classList.add("active");
-      viewSat.classList.remove("active");
-
-      // Trigger map resize if Google Map is loaded to avoid render glitch
-      if (isGoogleMapsInitialized && googleMapInstance && window.google) {
-        google.maps.event.trigger(googleMapInstance, "resize");
-        googleMapInstance.setCenter({ lat: +activeFarmer.latitude, lng: +activeFarmer.longitude });
-      }
-    });
-  }
-
-  // Metadata for All 23 Indian Languages Supported in Header Dropdown (Requirement 4)
-  const languageMetadata = {
-    en: { name: "English", native: "English", dir: "ltr" },
-    hi: { name: "Hindi", native: "हिन्दी", dir: "ltr" },
-    ur: { name: "Urdu", native: "اردو", dir: "rtl" },
-    mr: { name: "Marathi", native: "मराठी", dir: "ltr" },
-    bn: { name: "Bengali", native: "বাংলা", dir: "ltr" },
-    te: { name: "Telugu", native: "తెలుగు", dir: "ltr" },
-    ta: { name: "Tamil", native: "தமிழ்", dir: "ltr" },
-    gu: { name: "Gujarati", native: "ગુજરાતી", dir: "ltr" },
-    kn: { name: "Kannada", native: "ಕನ್ನಡ", dir: "ltr" },
-    ml: { name: "Malayalam", native: "മലയാളം", dir: "ltr" },
-    pa: { name: "Punjabi", native: "ਪੰਜਾਬੀ", dir: "ltr" },
-    or: { name: "Odia", native: "ଓଡ଼ିଆ", dir: "ltr" },
-    as: { name: "Assamese", native: "অসমীয়া", dir: "ltr" },
-    mai: { name: "Maithili", native: "मैथिली", dir: "ltr" },
-    ma: { name: "Maithili", native: "मैथिली", dir: "ltr" },
-    ks: { name: "Kashmiri", native: "كٲشُر / कॉशुर", dir: "rtl" },
-    ne: { name: "Nepali", native: "नेपाली", dir: "ltr" },
-    sd: { name: "Sindhi", native: "سنڌي", dir: "rtl" },
-    sa: { name: "Sanskrit", native: "संस्कृतम्", dir: "ltr" },
-    kok: { name: "Konkani", native: "कोंकणी", dir: "ltr" },
-    doi: { name: "Dogri", native: "डोगरी", dir: "ltr" },
-    brx: { name: "Bodo", native: "बड़ो", dir: "ltr" },
-    mni: { name: "Manipuri", native: "মৈতৈলোন্", dir: "ltr" },
-    sat: { name: "Santali", native: "ᱥᱟᱱᱛᱟᱲᱤ", dir: "ltr" },
-    bho: { name: "Bhojpuri", native: "भोजपुरी", dir: "ltr" }
-  };
-
-  // 13-Point Structured Advisory Summary Generator (Requirement 2)
-  function getFieldSummaryAdvisory(zone, lang = "en") {
+  // 2. Dynamic Field Summary Panel Renderer
+  function renderFieldSummary() {
+    const zone = currentZone || "C";
     const data = zoneData[zone] || zoneData.C;
-    const fName = activeFarmer.name || "Ramesh Kumar";
-    const fLoc = activeFarmer.location || "Ghaziabad, Uttar Pradesh";
-    const fCrop = activeFarmer.crop || "Wheat";
-    const fSize = activeFarmer.fieldSize ? `${activeFarmer.fieldSize} acres` : "2.5 acres";
-    const fLat = Math.abs(+activeFarmer.latitude || 28.6692).toFixed(4) + "° " + ((+activeFarmer.latitude >= 0) ? "N" : "S");
-    const fLng = Math.abs(+activeFarmer.longitude || 77.4538).toFixed(4) + "° " + ((+activeFarmer.longitude >= 0) ? "E" : "W");
-    const fCoords = `${fLat}, ${fLng}`;
+    const farmer = activeFarmer;
+    const lang = currentLang || "en";
 
-    // Native Hindi Advisory
-    if (lang === "hi") {
-      return {
-        badgeTag: `हिस्सा ${zone} · ${data.label}`,
-        items: [
-          {
-            num: "1",
-            title: "किसान एवं खेत का विवरण",
-            badge: "सत्यापित प्रोफाइल",
-            badgeType: "routine",
-            text: `<strong>किसान:</strong> ${fName} (${activeFarmer.experience || "6–10 वर्ष अनुभव"})<br><strong>खेत पहचान:</strong> उत्तरी भूखंड · KV-DEMO-014`
-          },
-          {
-            num: "2",
-            title: "खेत की लोकेशन एवं निर्देशांक",
-            badge: "GPS सिंक्रनाइज़्ड",
-            badgeType: "routine",
-            text: `<strong>स्थान:</strong> ${fLoc}<br><strong>निर्देशांक:</strong> ${fCoords}`
-          },
-          {
-            num: "3",
-            title: "चुनी गई फसल",
-            badge: "मौसम चक्र",
-            badgeType: "routine",
-            text: `<strong>मुख्य फसल:</strong> ${fCrop}<br><strong>अवस्था:</strong> कल्ले फूटने की अवस्था (टिलरिंग · नमूना अवलोकन)`
-          },
-          {
-            num: "4",
-            title: "खेत का आकार",
-            badge: "क्षेत्रफल",
-            badgeType: "routine",
-            text: `<strong>रकबा:</strong> ${fSize} (समान प्रबंधन इकाई)`
-          },
-          {
-            num: "5",
-            title: "चयनित हिस्सा एवं प्राथमिकता",
-            badge: `प्राथमिकता: ${data.label}`,
-            badgeType: data.p,
-            text: `<strong>हिस्सा:</strong> ज़ोन ${zone} — ${data.title}<br><strong>मार्गदर्शन:</strong> ${data.hint}`
-          },
-          {
-            num: "6",
-            title: "फसल ताकत एवं वनस्पति सूचकांक (NDVI)",
-            badge: data.vigour,
-            badgeType: data.vigourNum >= 75 ? "routine" : "nutrient",
-            text: `<strong>निरीक्षण:</strong> इस हिस्से का वनस्पति परावर्तन सूचकांक ${data.vigour} है। ${zone === 'C' ? 'आसपास के स्वस्थ हिस्सों (हिस्सा A: 82%) की तुलना में यहाँ पत्तियों का हरापन कम है।' : 'कैनोपी परावर्तन स्थिर बना हुआ है।'}`
-          },
-          {
-            num: "7",
-            title: "सतही नमी अवलोकन",
-            badge: data.moisture,
-            badgeType: zone === 'B' ? 'moisture' : 'routine',
-            text: `<strong>नमी स्थिति:</strong> ${data.moisture}। ${zone === 'B' ? 'यहाँ सतही नमी में कमी दर्ज हुई है। सिंचाई से पहले 10–15 सेमी जड़ की गहराई पर जांचें।' : 'वर्तमान उपग्रह अवलोकन में सामान्य सतही नमी संकेत मिले हैं।'}`
-          },
-          {
-            num: "8",
-            title: "संभावित फसल तनाव के संकेत",
-            badge: `${data.stressNum}% तनाव सूचकांक`,
-            badgeType: data.stressNum > 50 ? (zone === 'E' ? 'scout' : 'nutrient') : 'routine',
-            text: `<strong>तनाव विश्लेषण:</strong> ${data.detail}`
-          },
-          {
-            num: "9",
-            title: "किसान के लिए अनुशंसित त्वरित कदम",
-            badge: "फील्ड एक्शन",
-            badgeType: "highlight",
-            text: zone === 'B'
-              ? '1. खुरपी से 10–15 सेमी जड़ क्षेत्र की मिट्टी की नमी जांचें।<br>2. यदि अगले 48 घंटों में बारिश का अनुमान हो तो नलकूप न चलाएँ।'
-              : zone === 'C'
-              ? '1. खेत में जाकर पत्तियों का पीलापन जांचें।<br>2. बिना जांच के रासायनिक खाद का छिड़काव न करें।<br>3. प्रयोगशाला जांच हेतु मिट्टी का नमूना एकत्र करें।'
-              : zone === 'E'
-              ? '1. पत्तियों के नीचे और तने पर कीट या फफूंद के लक्षण देखें।<br>2. पौधे की तस्वीर लेकर स्थानीय KVK कृषि अधिकारी से सलाह लें।'
-              : '1. नियमित खेत निगरानी जारी रखें।<br>2. आगामी उपग्रह पास से तुलना करें।'
-          },
-          {
-            num: "10",
-            title: "मिट्टी परीक्षण एवं प्रयोगशाला सत्यापन",
-            badge: "सत्यापन आवश्यक",
-            badgeType: "nutrient",
-            text: 'खेत के इस हिस्से से ज़िग-ज़ैग पैटर्न में 15–20 सेमी गहराई से 6–8 स्थानों से मिट्टी का नमूना लें। नज़दीकी <strong>कृषि विज्ञान केंद्र (KVK)</strong> या सरकारी लैब में pH, जैविक कार्बन और उपलब्ध N-P-K की जांच कराएँ।'
-          },
-          {
-            num: "11",
-            title: "खाद एवं पोषक तत्व प्रबंधन मार्गदर्शन",
-            badge: "वैज्ञानिक सिद्धांत",
-            badgeType: "highlight",
-            text: '<strong>महत्वपूर्ण वैज्ञानिक नियम:</strong> उपग्रह चित्र केवल पत्तियों के रंग व परावर्तन से संकेत देते हैं, वे मिट्टी में N-P-K की मात्रा नहीं मापते। हमेशा लैब रिपोर्ट के आधार पर ही पोषक तत्व चुनें। मिट्टी की जैविक सेहत सुधारने के लिए सड़ी गोबर खाद या केंचुआ खाद को प्राथमिकता दें।'
-          },
-          {
-            num: "12",
-            title: "सिंचाई एवं कीट-रोग निरीक्षण सलाह",
-            badge: "एग्रोनॉमी चेक",
-            badgeType: "moisture",
-            text: 'सिंचाई केवल मिट्टी में वास्तविक नमी की कमी होने पर ही करें। तनावग्रस्त पौधों में अंधाधुंध यूरिया न डालें। कीड़ों या फफूंद की पुष्टि होने पर ही अनुशंसित जैविक या एकीकृत नियंत्रण अपनाएँ।'
-          },
-          {
-            num: "13",
-            title: "डेमो अस्वीकरण एवं विशेषज्ञ परामर्श",
-            badge: "प्रोटोटाइप डेटा",
-            badgeType: "routine",
-            text: '<em>*यह सारांश हैकाथॉन प्रोटोटाइप हेतु उदाहरणात्मक डेटा है। कोई भी कृषि निवेश खरीदने या प्रयोग करने से पहले अधिकृत कृषि विशेषज्ञ या KVK से परामर्श अवश्य करें।</em>'
-          }
-        ]
-      };
+    // Update Zone Pill in header
+    if ($("#summaryZonePill")) {
+      $("#summaryZonePill").textContent = `Zone ${zone} · ${data.label}`;
     }
 
-    // Native Urdu RTL Advisory
-    if (lang === "ur") {
-      return {
-        badgeTag: `حصہ ${zone} · ${data.label}`,
-        items: [
-          {
-            num: "1",
-            title: "کسان اور کھیت کی تفصیلات",
-            badge: "تصدیق شدہ پروفائل",
-            badgeType: "routine",
-            text: `<strong>کسان:</strong> ${fName} (${activeFarmer.experience || "6–10 سال تجربہ"})<br><strong>پلاٹ شناختی نمبر:</strong> شمالی پلاٹ · KV-DEMO-014`
-          },
-          {
-            num: "2",
-            title: "کھیت کا مقام اور کوآرڈینیٹس",
-            badge: "GPS مطابقت",
-            badgeType: "routine",
-            text: `<strong>مقام:</strong> ${fLoc}<br><strong>محل وقوع:</strong> ${fCoords}`
-          },
-          {
-            num: "3",
-            title: "منتخب کردہ فصل",
-            badge: "موسمی مرحلہ",
-            badgeType: "routine",
-            text: `<strong>فصل:</strong> ${fCrop}<br><strong>مرحلہ:</strong> شگوفے پھوٹنے کا مرحلہ (ٹلرنگ · نمونہ)`
-          },
-          {
-            num: "4",
-            title: "کھیت کا رقبہ",
-            badge: "رقبہ",
-            badgeType: "routine",
-            text: `<strong>رقبہ:</strong> ${fSize} (یکساں انتظامی رقبہ)`
-          },
-          {
-            num: "5",
-            title: "منتخب کردہ زون اور ترجیح",
-            badge: `ترجیح: ${data.label}`,
-            badgeType: data.p,
-            text: `<strong>زون:</strong> زون ${zone} — ${data.title}<br><strong>رہنمائی:</strong> ${data.hint}`
-          },
-          {
-            num: "6",
-            title: "فصل کی قوت اور نباتاتی انڈیکس (NDVI)",
-            badge: data.vigour,
-            badgeType: data.vigourNum >= 75 ? "routine" : "nutrient",
-            text: `<strong>مشاہدہ:</strong> اس زون میں فصل کا انڈیکس ${data.vigour} ہے۔ ${zone === 'C' ? 'قریبی سرسبز حصوں کے مقابلے میں پتوں کی سبزی کم پائی گئی ہے۔' : 'پودوں کی نشوونما متوازن ہے۔'}`
-          },
-          {
-            num: "7",
-            title: "سطحی نمی کا مشاہدہ",
-            badge: data.moisture,
-            badgeType: zone === 'B' ? 'moisture' : 'routine',
-            text: `<strong>نمی کی حالت:</strong> ${data.moisture}۔ ${zone === 'B' ? 'سطحی نمی میں کمی ہے۔ پانی لگانے سے پہلے 10–15 سینٹی میٹر جڑ کے قریب چیک کریں۔' : 'سیٹلائٹ سگنل میں نمی کی مقدار مناسب معلوم ہوتی ہے۔'}`
-          },
-          {
-            num: "8",
-            title: "ممکنہ فصلی دباؤ کے اشارے",
-            badge: `${data.stressNum}% تناؤ کا تناسب`,
-            badgeType: data.stressNum > 50 ? (zone === 'E' ? 'scout' : 'nutrient') : 'routine',
-            text: `<strong>تجزیہ:</strong> ${data.detail}`
-          },
-          {
-            num: "9",
-            title: "کسان کے لیے فوری عملی اقدامات",
-            badge: "عملی قدم",
-            badgeType: "highlight",
-            text: zone === 'B'
-              ? '1. جڑ کے قریب 10–15 سینٹی میٹر مٹی کی نمی ہاتھ سے چیک کریں۔<br>2. اگر اگلے 48 گھنٹوں میں بارش کا امکان ہو تو ٹیوب ویل نہ چلائیں۔'
-              : zone === 'C'
-              ? '1. کھیت میں جا کر پتوں کا پیلا پن چیک کریں۔<br>2. بغیر لیب ٹیسٹ کے کیمیائی کھاد نہ ڈالیں۔<br>3. مٹی کا نمونہ لے کر ٹیسٹ کروائیں۔'
-              : zone === 'E'
-              ? '1. پتوں کے نچلے حصے میں کیڑوں یا فنگس کا معائنہ کریں۔<br>2. مقامی زرعی افسر کو تصویر دکھا کر مشورہ لیں۔'
-              : '1. معمول کے مطابق کھیت کا معائنہ جاری رکھیں۔<br>2. اگلے سیٹلائٹ پاس سے موازنہ کریں۔'
-          },
-          {
-            num: "10",
-            title: "مٹی ٹیسٹ اور لیبارٹری تصدیق",
-            badge: "تصدیق لازمی",
-            badgeType: "nutrient",
-            text: 'اس زون سے زگ زیگ انداز میں 15–20 سینٹی میٹر گہرائی سے مٹی کا نمونہ لیں۔ قریبی <strong>کرشی وگیان کیندر (KVK)</strong> سے pH، نامیاتی مادہ اور N-P-K کی مکمل جانچ کروائیں۔'
-          },
-          {
-            num: "11",
-            title: "کھاد اور غذائی انتظام کی سائنسی رہنمائی",
-            badge: "سائنسی اصول",
-            badgeType: "highlight",
-            text: '<strong>اہم سائنسی اصول:</strong> سیٹلائٹ تصویر صرف پتوں کی روشنی کا عکس بتاتی ہے، وہ مٹی میں N-P-K نہیں ناپ سکتی۔ کھاد کا فیصلہ ہمیشہ لیب رپورٹ پر کریں۔ مٹی کی زرخیزی کے لیے قدرتی کمپوسٹ یا کیچوا کھاد کو ترجیح دیں۔'
-          },
-          {
-            num: "12",
-            title: "آبپاشی اور کیڑوں کا معائنہ",
-            badge: "زرعی چیک",
-            badgeType: "moisture",
-            text: 'آبپاشی صرف اسی وقت کریں جب مٹی میں واقعی ضرورت ہو۔ بیمار پودوں پر زیادہ یوریا نہ ڈالیں تاکہ فنگس نہ پھیلے۔'
-          },
-          {
-            num: "13",
-            title: "ڈیمو اعلامیہ اور ماہرانہ مشورہ",
-            badge: "پروٹوٹائپ ڈیٹا",
-            badgeType: "routine",
-            text: '<em>*یہ تمام اعداد و شمار پروٹوٹائپ ڈیمو کے لیے ہیں۔ کھاد یا دوا کے استعمال سے پہلے مستند زرعی ماہر سے مشورہ لیں۔</em>'
-          }
-        ]
-      };
+    // SECTION 1: Field Overview
+    const sumOverview = $("#sumOverviewContent");
+    if (sumOverview) {
+      if (lang === "hi") {
+        sumOverview.innerHTML = `
+          <div class="summary-meta-grid">
+            <div class="summary-meta-item"><small>किसान का नाम</small><strong>${farmer.name}</strong></div>
+            <div class="summary-meta-item"><small>चुनी गई फसल</small><strong>${farmer.crop}</strong></div>
+            <div class="summary-meta-item"><small>खेत का आकार</small><strong>${farmer.fieldSize || "2.5"} एकड़ (नॉर्थ प्लॉट)</strong></div>
+            <div class="summary-meta-item"><small>सक्रिय ज़ोन</small><strong>ज़ोन ${zone} (${data.label})</strong></div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#6b7c64;">
+            📍 <strong>स्थान:</strong> ${farmer.location} · <strong>निर्देशांक:</strong> ${farmer.latitude || "28.6692"}° N, ${farmer.longitude || "77.4538"}° E
+          </p>
+        `;
+      } else if (lang === "ur") {
+        sumOverview.innerHTML = `
+          <div class="summary-meta-grid">
+            <div class="summary-meta-item"><small>کسان کا نام</small><strong>${farmer.name}</strong></div>
+            <div class="summary-meta-item"><small>منتخب فصل</small><strong>${farmer.crop}</strong></div>
+            <div class="summary-meta-item"><small>کھیت کا رقبہ</small><strong>${farmer.fieldSize || "2.5"} ایکڑ (شمالی پلاٹ)</strong></div>
+            <div class="summary-meta-item"><small>فعال حصہ</small><strong>حصہ ${zone} (${data.label})</strong></div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#6b7c64;">
+            📍 <strong>مقام:</strong> ${farmer.location} · <strong>متوازی نقاط:</strong> ${farmer.latitude || "28.6692"}° N, ${farmer.longitude || "77.4538"}° E
+          </p>
+        `;
+      } else {
+        sumOverview.innerHTML = `
+          <div class="summary-meta-grid">
+            <div class="summary-meta-item"><small>Farmer Name</small><strong>${farmer.name}</strong></div>
+            <div class="summary-meta-item"><small>Primary Crop</small><strong>${farmer.crop}</strong></div>
+            <div class="summary-meta-item"><small>Plot Area</small><strong>${farmer.fieldSize || "2.5"} acres (North Plot)</strong></div>
+            <div class="summary-meta-item"><small>Active Zone</small><strong>Zone ${zone} (${data.label})</strong></div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#6b7c64;">
+            📍 <strong>Location:</strong> ${farmer.location} · <strong>Coordinates:</strong> ${farmer.latitude || "28.6692"}° N, ${farmer.longitude || "77.4538"}° E
+          </p>
+        `;
+      }
     }
 
-    // Default: English Structured Advisory
-    return {
-      badgeTag: `ZONE ${zone} · ${data.label}`,
-      items: [
-        {
-          num: "1",
-          title: "Farmer & Field Profile",
-          badge: "Verified Profile",
-          badgeType: "routine",
-          text: `<strong>Farmer:</strong> ${fName} (${activeFarmer.experience || "6–10 years experience"})<br><strong>Field Identifier:</strong> North Plot · KV-DEMO-014`
-        },
-        {
-          num: "2",
-          title: "Farm Location & Coordinates",
-          badge: "GPS Synchronized",
-          badgeType: "routine",
-          text: `<strong>Location:</strong> ${fLoc}<br><strong>Coordinates:</strong> ${fCoords}`
-        },
-        {
-          num: "3",
-          title: "Selected Crop",
-          badge: "Crop Calendar",
-          badgeType: "routine",
-          text: `<strong>Crop:</strong> ${fCrop}<br><strong>Growth Stage:</strong> Tillering Stage (illustrative observation)`
-        },
-        {
-          num: "4",
-          title: "Field Size",
-          badge: "Acreage",
-          badgeType: "routine",
-          text: `<strong>Area:</strong> ${fSize} (uniform management unit)`
-        },
-        {
-          num: "5",
-          title: "Selected Zone & Priority Classification",
-          badge: `Priority: ${data.label}`,
-          badgeType: data.p,
-          text: `<strong>Field Zone:</strong> Zone ${zone} — ${data.title}<br><strong>Agronomic Priority:</strong> ${data.hint}`
-        },
-        {
-          num: "6",
-          title: "Crop Vigour & Vegetation Index (NDVI)",
-          badge: data.vigour,
-          badgeType: data.vigourNum >= 75 ? "routine" : "nutrient",
-          text: `<strong>Canopy Reflectance:</strong> Index reading is ${data.vigour}. ${zone === 'C' ? 'Vegetation density differs from adjacent high-vigour areas (Zone A is 82%). Review on foot.' : 'Uniform reflectance patterns observed across canopy.'}`
-        },
-        {
-          num: "7",
-          title: "Moisture Observations",
-          badge: data.moisture,
-          badgeType: zone === 'B' ? 'moisture' : 'routine',
-          text: `<strong>Surface Moisture Context:</strong> ${data.moisture}. ${zone === 'B' ? 'Localized surface moisture deficit detected. Verify soil at 10–15 cm root depth before running irrigation.' : 'Moisture signals appear adequate within normal seasonal parameters.'}`
-        },
-        {
-          num: "8",
-          title: "Possible Crop-Stress Clues",
-          badge: `${data.stressNum}% Stress Index`,
-          badgeType: data.stressNum > 50 ? (zone === 'E' ? 'scout' : 'nutrient') : 'routine',
-          text: `<strong>Stress Analysis:</strong> ${data.detail}`
-        },
-        {
-          num: "9",
-          title: "Recommended Actionable Next Steps",
-          badge: "Field Action",
-          badgeType: "highlight",
-          text: zone === 'B'
-            ? '1. Manually check root-zone moisture with a soil auger or trowel at 10–15 cm depth.<br>2. Postpone tube-well irrigation if local rain probability exceeds 40% in the next 48 hours.'
-            : zone === 'C'
-            ? '1. Walk Zone C and inspect leaves for chlorosis, tip burn, or pale coloration.<br>2. Do NOT guess or broadcast chemical fertilizer without verification.<br>3. Collect a representative soil core sample for laboratory testing.'
-            : zone === 'E'
-            ? '1. Inspect leaf undersides and stems for insect pests (aphids, borers) or fungal rust.<br>2. Take clear photographs and share with local block agriculture extension officers.'
-            : '1. Continue routine visual scouting during regular field rounds.<br>2. Compare observations with the next Sentinel-2 satellite pass.'
-        },
-        {
-          num: "10",
-          title: "Soil-Testing & Validation Recommendations",
-          badge: "Validation Required",
-          badgeType: "nutrient",
-          text: 'Take 15–20 cm core samples in a zigzag pattern across 6–8 spots in this zone. Submit the composite sample to your local <strong>Krishi Vigyan Kendra (KVK)</strong> or certified district lab to test pH, organic carbon (OC), and available N-P-K.'
-        },
-        {
-          num: "11",
-          title: "Fertilizer & Nutrient-Management Guidance",
-          badge: "Scientific Rule",
-          badgeType: "highlight",
-          text: '<strong>CRITICAL SCIENTIFIC RULE:</strong> Satellite imagery measures canopy optical reflection patterns—it does NOT directly measure chemical soil N-P-K quantities. Base all input decisions on laboratory soil-test results. To restore long-term soil organic carbon, consider well-decomposed natural compost or vermicompost.'
-        },
-        {
-          num: "12",
-          title: "Irrigation & Field-Inspection Recommendations",
-          badge: "Agronomy Check",
-          badgeType: "moisture",
-          text: 'Irrigate only when root-depth moisture is genuinely depleted to prevent root waterlogging and nutrient leaching. Avoid applying high doses of chemical nitrogen to stressed or infected plants.'
-        },
-        {
-          num: "13",
-          title: "Illustrative Demo Disclaimer",
-          badge: "Prototype Data",
-          badgeType: "routine",
-          text: '<em>*This advisory is illustrative prototype demonstration data. It is not a clinical laboratory diagnosis. Always consult a certified local agronomist or KVK official before purchasing or applying agricultural inputs.</em>'
+    // SECTION 2: Observed Field Condition
+    const sumCondition = $("#sumConditionContent");
+    if (sumCondition) {
+      let tagClass = "tag-routine";
+      if (zone === "B") tagClass = "tag-moisture";
+      else if (zone === "C") tagClass = "tag-nutrient";
+      else if (zone === "E") tagClass = "tag-scout";
+
+      if (lang === "hi") {
+        sumCondition.innerHTML = `
+          <span class="summary-highlight-tag ${tagClass}">ज़ोन ${zone} स्थिति: ${data.label}</span>
+          <p style="margin:0 0 8px;font-weight:700;color:#2c4929;">${data.title}</p>
+          <div class="summary-meta-grid" style="margin-bottom:8px;">
+            <div class="summary-meta-item"><small>फसल ओज (NDVI)</small><strong>${data.vigour}</strong></div>
+            <div class="summary-meta-item"><small>सतही नमी सूचकांक</small><strong>${data.moisture}</strong></div>
+            <div class="summary-meta-item"><small>तनाव विसंगति स्तर</small><strong>${data.stress}</strong></div>
+            <div class="summary-meta-item"><small>पास के ज़ोन से तुलना</small><strong>ज़ोन A: 82% | ज़ोन C: 62%</strong></div>
+          </div>
+          <p style="margin:0;font-size:11.5px;color:#64735e;">${data.detail}</p>
+        `;
+      } else if (lang === "ur") {
+        sumCondition.innerHTML = `
+          <span class="summary-highlight-tag ${tagClass}">حصہ ${zone} کی حالت: ${data.label}</span>
+          <p style="margin:0 0 8px;font-weight:700;color:#2c4929;">${data.title}</p>
+          <div class="summary-meta-grid" style="margin-bottom:8px;">
+            <div class="summary-meta-item"><small>فصل کی شادابی (NDVI)</small><strong>${data.vigour}</strong></div>
+            <div class="summary-meta-item"><small>سطحی نمی کا انڈیکس</small><strong>${data.moisture}</strong></div>
+            <div class="summary-meta-item"><small>تناؤ کا انومالی لیول</small><strong>${data.stress}</strong></div>
+            <div class="summary-meta-item"><small>قریبی حصوں سے موازنہ</small><strong>حصہ A: 82% | حصہ C: 62%</strong></div>
+          </div>
+          <p style="margin:0;font-size:11.5px;color:#64735e;">${data.detail}</p>
+        `;
+      } else {
+        sumCondition.innerHTML = `
+          <span class="summary-highlight-tag ${tagClass}">Zone ${zone} Status: ${data.label}</span>
+          <p style="margin:0 0 8px;font-weight:700;color:#2c4929;">${data.title}</p>
+          <div class="summary-meta-grid" style="margin-bottom:8px;">
+            <div class="summary-meta-item"><small>Crop Vigour (NDVI)</small><strong>${data.vigour}</strong></div>
+            <div class="summary-meta-item"><small>Surface Moisture Index</small><strong>${data.moisture}</strong></div>
+            <div class="summary-meta-item"><small>Stress Anomaly Level</small><strong>${data.stress}</strong></div>
+            <div class="summary-meta-item"><small>Spatial Comparison</small><strong>Zone A: 82% vs Zone C: 62%</strong></div>
+          </div>
+          <p style="margin:0;font-size:11.5px;color:#64735e;">${data.detail}</p>
+        `;
+      }
+    }
+
+    // SECTION 3: Recommended Next Steps (Numbered)
+    const sumSteps = $("#sumStepsContent");
+    if (sumSteps) {
+      let steps = [];
+      if (zone === "A") {
+        if (lang === "hi") {
+          steps = [
+            "नियमित साप्ताहिक निरीक्षण के दौरान ज़ोन A में फसल विकास की एकरूपता देखें।",
+            "कल्ले फूटने की स्थिति नोट करें और अगले उपग्रह पास से तुलना करें।",
+            "मानक फसल कैलेंडर के अनुसार सामान्य सिंचाई और निराई-गुड़ाई जारी रखें।"
+          ];
+        } else if (lang === "ur") {
+          steps = [
+            "ہفتہ وار معمول کے معائنے کے دوران حصہ A میں فصل کی یکسانیت دیکھیں۔",
+            "شگوفے پھوٹنے کی صورتحال نوٹ کریں اور اگلے سیٹلائٹ پاس سے موازنہ کریں۔",
+            "معمول کے مطابق فصل کی آبپاشی اور گوڈی جاری رکھیں۔"
+          ];
+        } else {
+          steps = [
+            "Conduct routine weekly crop walk through Zone A to observe tiller uniformity.",
+            "Log canopy development milestones and compare with upcoming satellite pass.",
+            "Maintain standard irrigation and weeding schedule per crop calendar."
+          ];
         }
-      ]
-    };
-  }
+      } else if (zone === "B") {
+        if (lang === "hi") {
+          steps = [
+            "सिंचाई शुरू करने से पहले ज़ोन B में 10–15 सेमी जड़ की गहराई पर मिट्टी की नमी जाँचें।",
+            "खेत की ढलान या मिट्टी के प्रकार में अंतर का निरीक्षण करें जहाँ पानी कम ठहरता हो।",
+            "यदि केवल जड़ सूखी हो तभी लक्षित सिंचाई करें; पूरे खेत में अनावश्यक पानी न भरें।"
+          ];
+        } else if (lang === "ur") {
+          steps = [
+            "ٹیوب ویل چلانے سے پہلے حصہ B میں 10–15 سینٹی میٹر جڑ کی گہرائی پر مٹی کی نمی دیکھیں۔",
+            "زمین کی اونچ نیچ یا مٹی کی ساخت کا جائزہ لیں جہاں پانی جلد خشک ہوتا ہو۔",
+            "صرف خشک ہونے کی صورت میں ضرورت کے مطابق پانی دیں؛ بے جا آبپاشی سے گریز کریں۔"
+          ];
+        } else {
+          steps = [
+            "Inspect soil moisture at 10–15 cm root depth using an auger or spade before irrigating.",
+            "Examine micro-topography or sandy subsoil pockets causing localized drainage.",
+            "Apply targeted light watering only if root zone is deficient; avoid field inundation."
+          ];
+        }
+      } else if (zone === "C") {
+        if (lang === "hi") {
+          steps = [
+            "ज़ोन C में जाकर पत्तियों के रंग (पीलापन या हल्कापन) का सीधे निरीक्षण करें।",
+            "ज़ोन C के विभिन्न कोनों से 0–15 सेमी की गहराई से 15–20 मिश्रित मिट्टी के नमूने एकत्र करें।",
+            "कोई भी खाद खरीदने या डालने से पहले नमूना मान्यता प्राप्त लैब में N-P-K व जैविक कार्बन जाँच हेतु भेजें।",
+            "लैब रिपोर्ट आने के बाद स्थानीय कृषि विज्ञान केंद्र (KVK) से सटीक खुराक तय करें।"
+          ];
+        } else if (lang === "ur") {
+          steps = [
+            "حصہ C میں چل کر پودوں کے رنگ اور زردی کا معائنہ کریں۔",
+            "حصہ C سے 0–15 سینٹی میٹر گہرائی سے 15–20 مٹی کے نمونے اکٹھے کر کے مکس کریں۔",
+            "کوئی بھی کھاد خریدنے سے پہلے مٹی کا نمونہ تصدیق شدہ لیب میں ٹیسٹ کے لیے بھیجیں۔",
+            "لیب رپورٹ ملنے پر مقامی زرعی ماہر (KVK) سے کھاد کی درست مقدار کا مشورہ لیں۔"
+          ];
+        } else {
+          steps = [
+            "Walk Zone C on foot to inspect leaf coloration and stunted tillering in person.",
+            "Collect a composite soil sample (15–20 cores at 0–15 cm root depth) across Zone C.",
+            "Send sample to a certified laboratory for soil organic carbon, pH, and available N-P-K testing before ordering fertilizers.",
+            "Review lab report with local KVK / extension agronomist to calculate precise, balanced nutrition."
+          ];
+        }
+      } else if (zone === "D") {
+        if (lang === "hi") {
+          steps = [
+            "फसल कैलेंडर के अनुसार सामान्य निगरानी जारी रखें।",
+            "कल्लों की संख्या और पौधों के फैलाव की नियमित पुष्टि करें।",
+            "आने वाले मौसम के आधार पर अगली सिंचाई की योजना बनाएँ।"
+          ];
+        } else if (lang === "ur") {
+          steps = [
+            "زرعی کیلنڈر کے مطابق معمول کی نگرانی جاری رکھیں۔",
+            "پودوں کی تعداد اور شادابی کا باقاعدگی سے جائزہ لیں۔",
+            "موسم کی پیشگوئی کے مطابق آئندہ آبپاشی کی منصوبہ بندی کریں۔"
+          ];
+        } else {
+          steps = [
+            "Maintain standard monitoring in sync with local crop stage schedule.",
+            "Verify plant population density and canopy biomass closure.",
+            "Record observations into field records for seasonal comparison."
+          ];
+        }
+      } else if (zone === "E") {
+        if (lang === "hi") {
+          steps = [
+            "ज़ोन E में तुरंत पैदल निरीक्षण करें: पत्तियों के नीचे माहू, सुंडी या फफूंद के लक्षण देखें।",
+            "जड़ों की जाँच करें कि कहीं दीमक, सूत्रकृमि या जड़ सड़न की समस्या तो नहीं है।",
+            "कीट या बीमारी दिखने पर पौधे का नमूना लें और स्थानीय कृषि अधिकारी से एकीकृत कीट प्रबंधन (IPM) सलाह लें।"
+          ];
+        } else if (lang === "ur") {
+          steps = [
+            "حصہ E میں فوری پیدل معائنہ کریں: پتوں کے نیچے کیڑے، سنڈی یا پھپھوندی کی علامات دیکھیں۔",
+            "جڑوں کا معائنہ کریں کہ کہیں جڑ سڑن یا کیڑوں کا حملہ تو نہیں ہے۔",
+            "کیڑے یا بیماری کی صورت میں پودے کا نمونہ لے کر مقامی زرعی افسر سے کیمیائی و حیاتیاتی علاج پوچھیں۔"
+          ];
+        } else {
+          steps = [
+            "Immediately scout Zone E on foot: inspect leaf undersides and stems for insect pests, aphids, or rust pustules.",
+            "Examine root systems for nematode galls, wireworms, or fungal root rot.",
+            "If pest or disease symptoms appear, collect specimens and consult local KVK officer for Integrated Pest Management (IPM)."
+          ];
+        }
+      } else {
+        if (lang === "hi") {
+          steps = [
+            "नियमित रूप से ज़ोन F का निरीक्षण जारी रखें और बदलाव दर्ज करें।",
+            "अगले उपग्रह पास में वर्णक्रमीय परावर्तन की स्थिरता देखें।",
+            "मानक कृषि कार्यों का पालन करते रहें।"
+          ];
+        } else if (lang === "ur") {
+          steps = [
+            "حصہ F کا باقاعدہ معائنہ جاری رکھیں اور تبدیلیاں نوٹ کریں۔",
+            "اگلے سیٹلائٹ پاس میں شادابی کے استحکام کا جائزہ لیں۔",
+            "معمول کی زرعی دیکھ بھال جاری رکھیں۔"
+          ];
+        } else {
+          steps = [
+            "Continue regular monitoring of Zone F and record vegetative changes.",
+            "Compare reflectance stability against upcoming Sentinel satellite revisit pass.",
+            "Maintain standard balanced agronomic practices."
+          ];
+        }
+      }
 
-  // Render Dynamic Field Summary in Left-Side Panel (Requirement 2 & 4)
-  function renderFieldSummary(lang = "en") {
-    const container = $("#fieldSummaryContent");
-    if (!container) return;
-
-    const summary = getFieldSummaryAdvisory(currentZone, lang);
-    const zoneBadgeTag = $("#summaryZoneTag");
-    const zoneBadge = $("#summaryZoneBadge");
-
-    if (zoneBadgeTag) zoneBadgeTag.textContent = summary.badgeTag;
-    if (zoneBadge) {
-      zoneBadge.className = `summary-zone-badge badge-${(zoneData[currentZone] || {}).p || 'routine'}`;
-    }
-
-    let html = "";
-
-    // If one of the 20 regional languages other than en, hi, ur is selected, show polite localized fallback notice
-    if (lang !== "en" && lang !== "hi" && lang !== "ur") {
-      const meta = languageMetadata[lang] || { name: lang, native: lang };
-      html += `
-        <div class="summary-fallback-notice">
-          <span>🌐</span>
-          <span><strong>${meta.native} (${meta.name}):</strong> Advisory displayed with standardized precision terms. Full regional voice model ready for pilot extension.</span>
-        </div>
+      sumSteps.innerHTML = `
+        <ol class="summary-steps-list">
+          ${steps.map((s, idx) => `<li><span class="step-badge">${idx + 1}</span><span>${s}</span></li>`).join("")}
+        </ol>
       `;
     }
 
-    summary.items.forEach(item => {
-      let badgeClass = "summary-item-badge ";
-      if (item.badgeType === "nutrient" || item.badgeType === "soiltest") badgeClass += "badge-nutrient";
-      else if (item.badgeType === "moisture") badgeClass += "badge-moisture";
-      else if (item.badgeType === "scout") badgeClass += "badge-scout";
-      else if (item.badgeType === "highlight") badgeClass += "badge-highlight";
-      else badgeClass += "badge-routine";
-
-      if (item.num === "11") {
-        html += `
-          <div class="summary-scientific-note">
-            <div class="summary-item-head">
-              <span class="summary-item-title"><span>${item.num}.</span> ${item.title}</span>
-              <span class="${badgeClass}">${item.badge}</span>
-            </div>
-            <p class="summary-item-text">${item.text}</p>
-          </div>
+    // SECTION 4: Irrigation and Moisture Guidance
+    const sumIrrigation = $("#sumIrrigationContent");
+    if (sumIrrigation) {
+      if (lang === "hi") {
+        sumIrrigation.innerHTML = `
+          <p style="margin:0 0 6px;"><strong>सतही नमी सूचक:</strong> ${data.moisture}</p>
+          <p style="margin:0;font-size:11.5px;color:#5a6854;">
+            💡 <strong>मार्गदर्शन:</strong> उपग्रह केवल ऊपरी मिट्टी और पत्तियों का परावर्तन देखते हैं। नलकूप चलाने से पहले 10–15 सेमी गहराई पर मिट्टी हाथ में लेकर नमी परखें। यदि आगामी 48 घंटों में बारिश का अनुमान हो तो सिंचाई टालें ताकि जलभराव न हो।
+          </p>
         `;
-      } else if (item.num === "9") {
-        html += `
-          <div class="summary-highlight-box">
-            <div class="summary-item-head">
-              <span class="summary-item-title"><span>${item.num}.</span> ${item.title}</span>
-              <span class="${badgeClass}">${item.badge}</span>
-            </div>
-            <p class="summary-item-text">${item.text}</p>
-          </div>
+      } else if (lang === "ur") {
+        sumIrrigation.innerHTML = `
+          <p style="margin:0 0 6px;"><strong>سطحی نمی کا اشارہ:</strong> ${data.moisture}</p>
+          <p style="margin:0;font-size:11.5px;color:#5a6854;">
+            💡 <strong>رہنمائی:</strong> سیٹلائٹ صرف اوپری سطح کا عکس دیکھتا ہے۔ ٹیوب ویل چلانے سے پہلے 10–15 سینٹی میٹر گہرائی پر مٹی دیکھ کر نمی جانچیں۔ اگر بارش کی پیشگوئی ہو تو آبپاشی مؤخر کریں تاکہ جڑیں نہ گلیں۔
+          </p>
         `;
       } else {
-        html += `
-          <div class="summary-item">
-            <div class="summary-item-head">
-              <span class="summary-item-title"><span>${item.num}.</span> ${item.title}</span>
-              <span class="${badgeClass}">${item.badge}</span>
-            </div>
-            <p class="summary-item-text">${item.text}</p>
-          </div>
+        sumIrrigation.innerHTML = `
+          <p style="margin:0 0 6px;"><strong>Surface Moisture Signal:</strong> ${data.moisture}</p>
+          <p style="margin:0;font-size:11.5px;color:#5a6854;">
+            💡 <strong>Practical Guide:</strong> Satellites observe canopy and topsoil reflectance. Always physically verify soil cohesion at 10–15 cm root depth before running tube wells. If rain is forecast within 48 hours, defer irrigation to avoid waterlogging and nitrogen leaching.
+          </p>
         `;
       }
-    });
-
-    container.innerHTML = html;
-  }
-
-  // Clipboard Copy Action for Advisory Summary (Requirement 2)
-  function copyAdvisorySummary() {
-    const summary = getFieldSummaryAdvisory(currentZone, currentLang);
-    const lines = [
-      "============================================================",
-      "KRISHIVED (कृषिवेद) — FIELD INTELLIGENCE ADVISORY SUMMARY",
-      "Precision Agriculture Prototype · Stage 3 Finalized Edition",
-      "Core Workflow: OBSERVE → ANALYSE → VALIDATE → ADVISE",
-      "============================================================",
-      "",
-      `Selected Zone: Zone ${currentZone}`,
-      `Advisory Classification: ${summary.badgeTag}`,
-      ""
-    ];
-
-    summary.items.forEach(item => {
-      const cleanText = item.text
-        .replace(/<br\s*\/?>/gi, "\n   ")
-        .replace(/<strong>(.*?)<\/strong>/gi, "$1")
-        .replace(/<em>(.*?)<\/em>/gi, "$1");
-      lines.push(`${item.num}. ${item.title} [${item.badge}]`);
-      lines.push(`   ${cleanText}`);
-      lines.push("");
-    });
-
-    lines.push("============================================================");
-    lines.push("*Illustrative demo advisory. Not a laboratory or clinical diagnosis.");
-    lines.push("Consult KVK / qualified agronomist before purchasing or applying inputs.");
-    lines.push("============================================================");
-
-    const fullText = lines.join("\n");
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(fullText)
-        .then(() => notify("Field Advisory Summary copied to clipboard!"))
-        .catch(() => fallbackCopy(fullText));
-    } else {
-      fallbackCopy(fullText);
     }
 
-    function fallbackCopy(str) {
-      const ta = document.createElement("textarea");
-      ta.value = str;
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-        notify("Field Advisory Summary copied!");
-      } catch {
-        notify("Summary ready (copy manually).");
+    // SECTION 5: Fertilizer and Soil Testing Guidance
+    const sumFertilizer = $("#sumFertilizerContent");
+    if (sumFertilizer) {
+      if (lang === "hi") {
+        sumFertilizer.innerHTML = `
+          <div class="summary-caveat-box">
+            <span class="summary-caveat-icon">⚠️</span>
+            <div>
+              <strong>महत्वपूर्ण वैज्ञानिक नियम (Scientific Caveat):</strong>
+              <p style="margin:3px 0 0;">उपग्रह चित्र केवल परावर्तन पैटर्न और पोषक तनाव के <u>संकेत</u> देते हैं। वे सीधे नाइट्रोजन, फॉस्फोरस या पोटाश (N-P-K) की मात्रा <u>नहीं मापते</u>।</p>
+            </div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#52644d;">
+            🧪 <strong>मिट्टी परीक्षण अनिवार्य:</strong> कोई भी खाद डालने से पहले ज़ोन से 15–20 जगह से मिट्टी का नमूना लेकर अधिकृत प्रयोगशाला से जाँच कराएँ। रिपोर्ट मिलने के बाद उपयुक्त जैविक खाद (केंचुआ खाद, कम्पोस्ट) से मिट्टी का जैविक कार्बन सुधारें।
+          </p>
+        `;
+      } else if (lang === "ur") {
+        sumFertilizer.innerHTML = `
+          <div class="summary-caveat-box">
+            <span class="summary-caveat-icon">⚠️</span>
+            <div>
+              <strong>اہم سائنسی اصول (Scientific Caveat):</strong>
+              <p style="margin:3px 0 0;">سیٹلائٹ صرف انعکاس اور غذائی تناؤ کے <u>اشارے</u> فراہم کرتا ہے۔ یہ براہ راست N-P-K کی مقدار <u>نہیں ناپتا</u>۔</p>
+            </div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#52644d;">
+            🧪 <strong>مٹی ٹیسٹ لازمی:</strong> کھاد ڈالنے سے پہلے مٹی کا لیب ٹیسٹ کرائیں۔ رپورٹ آنے کے بعد مناسب قدرتی کھاد (کیچوا کھاد، کمپوسٹ) کے ذریعے نامیاتی مادہ بہتر بنائیں۔
+          </p>
+        `;
+      } else {
+        sumFertilizer.innerHTML = `
+          <div class="summary-caveat-box">
+            <span class="summary-caveat-icon">⚠️</span>
+            <div>
+              <strong>Critical Scientific Principle:</strong>
+              <p style="margin:3px 0 0;">Satellite observations identify canopy optical reflectance clues. They <u>do NOT directly measure</u> soil nitrogen, phosphorus, or potassium (N-P-K) quantities.</p>
+            </div>
+          </div>
+          <p style="margin:8px 0 0;font-size:11.5px;color:#52644d;">
+            🧪 <strong>Soil Validation Required:</strong> Collect representative core samples (0–15 cm depth) across Zone ${zone} for accredited laboratory testing before altering fertilizer applications. After validation, prioritize organic compost/vermicompost to build long-term soil organic carbon.
+          </p>
+        `;
       }
-      ta.remove();
+    }
+
+    // SECTION 6: Pest and Disease Inspection
+    const sumPest = $("#sumPestContent");
+    if (sumPest) {
+      const isUrgent = zone === "E";
+      if (lang === "hi") {
+        sumPest.innerHTML = `
+          <p style="margin:0 0 6px;">
+            ${isUrgent ? '<strong style="color:#b23b2b;">🚨 प्राथमिकता निरीक्षण आवश्यक:</strong>' : '<strong>🔍 सामान्य निगरानी:</strong>'}
+            ${isUrgent ? 'ज़ोन E में पत्तियों पर असामान्य तनाव देखा गया है।' : 'वर्तमान में कोई गंभीर कीट प्रकोप नहीं दिखा है।'}
+          </p>
+          <ul style="margin:0;padding-left:18px;font-size:11.5px;color:#5a6854;line-height:1.6;">
+            <li>पत्तियों की निचली सतह पर माहू (aphids), सफेद मक्खी या माइट्स देखें।</li>
+            <li>पत्तियों पर पीले या भूरे फफूंदीय धब्बे (rust lesions) की जाँच करें।</li>
+            <li>तने के निचले हिस्से पर दीमक या कॉलर रॉट के लक्षण देखें।</li>
+          </ul>
+        `;
+      } else if (lang === "ur") {
+        sumPest.innerHTML = `
+          <p style="margin:0 0 6px;">
+            ${isUrgent ? '<strong style="color:#b23b2b;">🚨 ترجیحی معائنہ درکار:</strong>' : '<strong>🔍 معمول کی نگرانی:</strong>'}
+            ${isUrgent ? 'حصہ E میں فصل پر غیر معمولی تناؤ پایا گیا ہے۔' : 'فی الحال کسی شدید بیماری کی علامت نہیں ہے۔'}
+          </p>
+          <ul style="margin:0;padding-right:18px;font-size:11.5px;color:#5a6854;line-height:1.6;">
+            <li>پتوں کے نچلے حصے پر سست تیلہ، سفید مکھی یا کیڑے تلاش کریں۔</li>
+            <li>پتوں پر پیلے یا بھورے دھبے (رسٹ/رتوا) دیکھیں۔</li>
+            <li>تنے کی بنیاد پر دیمک یا فنگس کی علامات جانچیں۔</li>
+          </ul>
+        `;
+      } else {
+        sumPest.innerHTML = `
+          <p style="margin:0 0 6px;">
+            ${isUrgent ? '<strong style="color:#b23b2b;">🚨 Priority Scouting Alert:</strong>' : '<strong>🔍 Routine Monitoring:</strong>'}
+            ${isUrgent ? 'Elevated canopy stress detected in Zone E.' : 'No anomalous pathogen signal detected in this zone.'}
+          </p>
+          <ul style="margin:0;padding-left:18px;font-size:11.5px;color:#5a6854;line-height:1.6;">
+            <li>Inspect undersides of flag leaves for aphids, thrips, or mites.</li>
+            <li>Check leaf blades for yellow or brown rust pustules and blight lesions.</li>
+            <li>Check root crowns for collar rot or nematode galling.</li>
+          </ul>
+        `;
+      }
+    }
+
+    // SECTION 7: When to Contact an Expert
+    const sumExpert = $("#sumExpertContent");
+    if (sumExpert) {
+      if (lang === "hi") {
+        sumExpert.innerHTML = `
+          <p style="margin:0;font-size:11.5px;line-height:1.65;color:#55664f;">
+            👨‍🌾 <strong>कृषि विज्ञान केंद्र (KVK) या स्थानीय कृषि अधिकारी से संपर्क करें यदि:</strong><br>
+            1. लगातार दो उपग्रह पासों में ज़ोन का तनाव बना रहता है या बढ़ता है।<br>
+            2. खेत में 10% से अधिक पौधों पर अज्ञात कीट या फफूंदी के लक्षण दिखें।<br>
+            3. प्रयोगशाला की मिट्टी जाँच रिपोर्ट के आधार पर खाद व सूक्ष्म पोषक तत्वों की सटीक मात्रा तय करनी हो।
+          </p>
+        `;
+      } else if (lang === "ur") {
+        sumExpert.innerHTML = `
+          <p style="margin:0;font-size:11.5px;line-height:1.65;color:#55664f;">
+            👨‍🌾 <strong>مقامی زرعی ماہر یا KVK سے کب رابطہ کریں:</strong><br>
+            1. اگر دو مسلسل سیٹلائٹ پاسوں میں تناؤ برقرار رہے یا بڑھے۔<br>
+            2. پودوں پر نامعلوم کیڑوں یا بیماری کا اچانک حملہ ہو۔<br>
+            3. لیب سے حاصل شدہ مٹی ٹیسٹ رپورٹ کی روشنی میں کھاد کی مقدار طے کرنی ہو۔
+          </p>
+        `;
+      } else {
+        sumExpert.innerHTML = `
+          <p style="margin:0;font-size:11.5px;line-height:1.65;color:#55664f;">
+            👨‍🌾 <strong>Escalate to local Krishi Vigyan Kendra (KVK) or Extension Officer when:</strong><br>
+            1. Canopy stress anomaly persists across two consecutive satellite revisits.<br>
+            2. Over 10% of surveyed plants exhibit unknown wilting, leaf scorch, or pest colonization.<br>
+            3. Formulating prescription dosage from your certified laboratory soil health card.
+          </p>
+        `;
+      }
     }
   }
 
-  if ($("#copySummaryBtn")) $("#copySummaryBtn").addEventListener("click", copyAdvisorySummary);
-  if ($("#btnShareSummary")) $("#btnShareSummary").addEventListener("click", copyAdvisorySummary);
+  // 3. Download Clean, Printable HTML Summary Page
+  function downloadSummaryPage() {
+    const zone = currentZone || "C";
+    const data = zoneData[zone] || zoneData.C;
+    const farmer = activeFarmer;
+    const dateStr = new Date().toLocaleDateString("en-IN", {
+      year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+
+    const stepsHtml = $("#sumStepsContent ol") ? $("#sumStepsContent ol").innerHTML : `
+      <li>Walk Zone ${zone} on foot to inspect canopy vigour and color variation.</li>
+      <li>Check soil moisture at 10–15 cm root depth before irrigation decisions.</li>
+      <li>Collect representative composite soil sample for lab validation before altering chemical or natural inputs.</li>
+    `;
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="${currentLang || 'en'}" dir="${currentLang === 'ur' ? 'rtl' : 'ltr'}">
+<head>
+  <meta charset="utf-8">
+  <title>KrishiVed Field Intelligence Summary — Zone ${zone} (${farmer.name})</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --forest: #1c381e;
+      --leaf: #5e964b;
+      --sand: #fbfcf9;
+      --border: #dbe4d2;
+      --text: #2c3e29;
+      --muted: #6f8069;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--sand);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px;
+    }
+    .sheet {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 36px 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--forest);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+    .brand { font-size: 26px; font-weight: 800; color: var(--forest); display: flex; align-items: center; gap: 10px; }
+    .brand-mark { background: var(--forest); color: #b7e38f; border-radius: 8px; padding: 4px 10px; font-size: 20px; }
+    .doc-meta { text-align: right; font-size: 11px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+    .card { background: #f8faf5; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+    .card small { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; display: block; }
+    .card strong { font-size: 14px; color: var(--forest); display: block; margin-top: 3px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .metric-box { background: #eef5e6; border: 1px solid #cce0bf; border-radius: 8px; padding: 12px; text-align: center; }
+    .metric-box small { font-size: 11px; color: var(--muted); }
+    .metric-box strong { font-size: 16px; color: #2e5927; display: block; margin-top: 4px; }
+    .section-title { font-size: 15px; font-weight: 800; color: var(--forest); border-bottom: 1px solid #e2ebd8; padding-bottom: 6px; margin: 20px 0 10px; }
+    .steps-list { margin-left: 20px; margin-bottom: 16px; }
+    .steps-list li { margin-bottom: 8px; font-size: 13px; }
+    .caveat-box { background: #fff8e8; border: 1px solid #f2d99d; border-radius: 8px; padding: 14px 16px; margin: 20px 0; font-size: 12.5px; color: #7a5416; }
+    .caveat-box strong { display: block; margin-bottom: 4px; color: #5c3c0a; font-size: 13px; }
+    .print-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .print-btn { background: var(--forest); color: #fff; border: 0; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px dashed var(--border); font-size: 12px; color: var(--muted); }
+    @media print {
+      body { padding: 0; background: #fff; }
+      .sheet { border: 0; box-shadow: none; padding: 0; }
+      .print-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="print-bar">
+      <span style="font-size:12px;color:var(--muted);">KrishiVed Field Intelligence Advisory Report (Printable HTML Document)</span>
+      <button class="print-btn" onclick="window.print()">Print / Save as PDF 🖨️</button>
+    </div>
+
+    <header class="header">
+      <div>
+        <div class="brand"><span class="brand-mark">कृ</span> कृषिवेद (KrishiVed)</div>
+        <p style="font-size:12px;color:var(--muted);margin-top:4px;">Precision Agriculture &amp; Spatial Field Intelligence</p>
+      </div>
+      <div class="doc-meta">
+        <strong>FIELD ADVISORY SUMMARY</strong><br>
+        Date: ${dateStr}<br>
+        Report ID: KV-RPT-${zone}-${Date.now().toString().slice(-6)}
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card"><small>Farmer Name</small><strong>${farmer.name}</strong></div>
+      <div class="card"><small>Plot &amp; Area</small><strong>North Plot (${farmer.fieldSize || '2.5'} acres)</strong></div>
+      <div class="card"><small>Primary Crop</small><strong>${farmer.crop}</strong></div>
+      <div class="card"><small>Field Coordinates</small><strong>${farmer.latitude || '28.6692'}° N, ${farmer.longitude || '77.4538'}° E</strong></div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-box"><small>Selected Zone</small><strong>Zone ${zone} (${data.label})</strong></div>
+      <div class="metric-box"><small>Crop Vigour (NDVI)</small><strong>${data.vigour}</strong></div>
+      <div class="metric-box"><small>Surface Moisture</small><strong>${data.moisture}</strong></div>
+    </div>
+
+    <div class="section-title">1. Observed Field Condition</div>
+    <p style="font-size:13px;margin-bottom:12px;"><strong>${data.title}</strong> — ${data.detail}</p>
+
+    <div class="section-title">2. Recommended Next Steps for Zone ${zone}</div>
+    <ol class="steps-list">
+      ${stepsHtml}
+    </ol>
+
+    <div class="section-title">3. Moisture &amp; Irrigation Guidance</div>
+    <p style="font-size:13px;margin-bottom:12px;">
+      Surface reflectance indicates: <strong>${data.moisture}</strong>. Satellites monitor top-layer patterns. Always physically confirm moisture cohesion at active root depth (10–15 cm) using a spade or auger. Defer irrigation if rainfall is forecast within 48 hours.
+    </p>
+
+    <div class="caveat-box">
+      <strong>CRITICAL SCIENTIFIC PRINCIPLE:</strong>
+      Satellite observations detect optical reflection patterns and potential nutrient-stress clues. They DO NOT directly measure exact nitrogen, phosphorus, or potassium (N-P-K) quantities. Exact nutrient requirements must always be validated through certified laboratory soil testing and qualified local agricultural expertise.
+    </div>
+
+    <div class="section-title">4. Soil Validation &amp; Natural Inputs Status</div>
+    <p style="font-size:13px;margin-bottom:12px;">
+      Status: <strong>${soilState === 'result' ? 'Soil Test Validated (Demo: pH 7.3, Organic Carbon 0.51% Low, Available N Low, P Medium, K Adequate)' : 'Soil Validation Pending / Sample in Transit'}</strong>.
+      Following laboratory confirmation, natural organic fertilizers (compost, vermicompost) may be integrated into crop management to restore soil organic carbon.
+    </p>
+
+    <div class="signature-row">
+      <div>Field Inspector / Local Agronomist: ____________________</div>
+      <div>Farmer Signature: ____________________</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `KrishiVed-Field-Summary.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    notify("Field Summary HTML report downloaded. Open in browser to view or print.");
+  }
+
+  if ($("#downloadSummaryBtn")) {
+    $("#downloadSummaryBtn").addEventListener("click", downloadSummaryPage);
+  }
+
+  // 4. Multilingual Farmer Voice Advisory (Web Speech API)
+  let currentUtterance = null;
+  let voiceAdvisoryActive = false;
+
+  const voiceLangCodes = {
+    en: "en-IN",
+    hi: "hi-IN",
+    ur: "ur-PK",
+    mr: "mr-IN",
+    bn: "bn-IN",
+    pa: "pa-IN",
+    gu: "gu-IN",
+    ta: "ta-IN",
+    te: "te-IN",
+    kn: "kn-IN",
+    ml: "ml-IN",
+    or: "or-IN",
+    as: "as-IN",
+    mai: "hi-IN",
+    sat: "hi-IN",
+    ks: "ur-IN",
+    ne: "ne-NP",
+    kok: "mr-IN",
+    sd: "ur-PK",
+    doi: "hi-IN",
+    brx: "as-IN",
+    mni: "bn-IN",
+    sa: "sa-IN"
+  };
+
+  function generateVoiceAdvisoryText(langCode) {
+    const zone = currentZone || "C";
+    const farmer = activeFarmer;
+
+    if (langCode === "hi") {
+      if (zone === "C") {
+        return `नमस्ते ${farmer.name} जी। आपके ${farmer.crop} के खेत के ज़ोन सी में संभावित पोषक तनाव का संकेत देखा गया है। ध्यान रहे, उपग्रह केवल संकेत देते हैं, एन-पी-के की मात्रा नहीं मापते। कोई भी खाद डालने से पहले ज़ोन सी से मिट्टी का नमूना लेकर लैब में जाँच अवश्य कराएँ।`;
+      } else if (zone === "B") {
+        return `नमस्ते ${farmer.name} जी। आपके खेत के ज़ोन बी में सतही नमी की कमी का संकेत मिला है। सिंचाई चलाने से पहले दस से पंद्रह सेंटीमीटर जड़ की गहराई पर मिट्टी की नमी स्वयं जाँचें।`;
+      } else if (zone === "E") {
+        return `नमस्ते ${farmer.name} जी। ज़ोन ई में फसल पर अतिरिक्त तनाव दिखाई दे रहा है। कृपया ज़ोन ई में तुरंत जाकर पत्तियों के नीचे कीड़े या बीमारी की जाँच करें और विशेषज्ञ से सलाह लें।`;
+      } else {
+        return `नमस्ते ${farmer.name} जी। ज़ोन ${zone} में फसल की बढ़वार सामान्य और स्थिर है। नियमित निगरानी जारी रखें।`;
+      }
+    } else if (langCode === "ur") {
+      if (zone === "C") {
+        return `محترم ${farmer.name} صاحب۔ آپ کے ${farmer.crop} کے کھیت کے حصہ سی میں ممکنہ غذائی کمی کا اشارہ ملا ہے۔ یاد رہے کہ سیٹلائٹ صرف اشارے دیتا ہے، براہ راست کھاد نہیں ناپتا۔ کوئی بھی کھاد استعمال کرنے سے پہلے مٹی کا ٹیسٹ ضرور کروائیں۔`;
+      } else if (zone === "B") {
+        return `محترم ${farmer.name} صاحب۔ حصہ بی میں سطحی نمی میں کمی نوٹ کی گئی ہے۔ ٹیوب ویل چلانے سے پہلے دس سے پندرہ سینٹی میٹر جڑ کے پاس نمی ضرور چیک کریں۔`;
+      } else if (zone === "E") {
+        return `محترم ${farmer.name} صاحب۔ حصہ ای میں فصل پر غیر معمولی تناؤ دیکھا گیا ہے۔ پودوں اور پتوں کا فوری معائنہ کریں تاکہ کیڑوں یا بیماری کا بروقت علاج کیا جا سکے۔`;
+      } else {
+        return `محترم ${farmer.name} صاحب۔ حصہ ${zone} میں فصل کی حالت مستحکم ہے۔ معمول کا معائنہ جاری رکھیں۔`;
+      }
+    } else {
+      if (zone === "C") {
+        return `Hello ${farmer.name}. In your ${farmer.crop} field, Zone C displays a potential nutrient-stress clue. Please remember: satellite signals detect optical reflectance, not direct N-P-K. We strongly advise collecting a laboratory soil sample before selecting fertilizers.`;
+      } else if (zone === "B") {
+        return `Hello ${farmer.name}. Zone B shows a localized moisture deficit pattern. Please check soil moisture at 10 to 15 centimeters root depth before running irrigation.`;
+      } else if (zone === "E") {
+        return `Hello ${farmer.name}. Elevated canopy stress detected in Zone E. Please scout this zone on foot to inspect leaf undersides for pests or disease, and consult your local agricultural expert.`;
+      } else {
+        return `Hello ${farmer.name}. Zone ${zone} exhibits healthy, uniform vegetative vigour. Continue routine field scouting.`;
+      }
+    }
+  }
+
+  function updateVoiceTranscript() {
+    const picker = $("#voiceLangSelect");
+    const lang = picker ? picker.value : (currentLang || "hi");
+    const text = generateVoiceAdvisoryText(lang);
+    const box = $("#voiceTranscriptText");
+    if (box) box.textContent = text;
+  }
+
+  function initVoiceAdvisory() {
+    const playBtn = $("#voicePlayBtn");
+    const pauseBtn = $("#voicePauseBtn");
+    const resumeBtn = $("#voiceResumeBtn");
+    const stopBtn = $("#voiceStopBtn");
+    const badge = $("#voiceStatusBadge");
+    const langSelect = $("#voiceLangSelect");
+
+    if (!window.speechSynthesis) {
+      if (badge) {
+        badge.textContent = "Not Supported";
+        badge.className = "voice-status-badge";
+      }
+      if (playBtn) playBtn.disabled = true;
+      return;
+    }
+
+    function setBadgeState(state) {
+      if (!badge) return;
+      badge.className = "voice-status-badge";
+      if (state === "playing") {
+        badge.textContent = "▶ Playing";
+        badge.classList.add("playing");
+        if (playBtn) playBtn.disabled = true;
+        if (pauseBtn) { pauseBtn.disabled = false; pauseBtn.style.display = "inline-flex"; }
+        if (resumeBtn) resumeBtn.style.display = "none";
+        if (stopBtn) stopBtn.disabled = false;
+      } else if (state === "paused") {
+        badge.textContent = "⏸ Paused";
+        badge.classList.add("paused");
+        if (pauseBtn) pauseBtn.style.display = "none";
+        if (resumeBtn) { resumeBtn.style.display = "inline-flex"; resumeBtn.disabled = false; }
+      } else {
+        badge.textContent = "● Ready";
+        if (playBtn) playBtn.disabled = false;
+        if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.style.display = "inline-flex"; }
+        if (resumeBtn) resumeBtn.style.display = "none";
+        if (stopBtn) stopBtn.disabled = true;
+      }
+    }
+
+    function stopVoice() {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      currentUtterance = null;
+      voiceAdvisoryActive = false;
+      setBadgeState("ready");
+    }
+
+    function playVoice() {
+      stopVoice();
+      const lang = langSelect ? langSelect.value : "hi";
+      const text = generateVoiceAdvisoryText(lang);
+      updateVoiceTranscript();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      currentUtterance = utterance;
+
+      const targetTag = voiceLangCodes[lang] || "hi-IN";
+      utterance.lang = targetTag;
+      utterance.rate = 0.92;
+      utterance.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length) {
+        const exactVoice = voices.find(v => v.lang === targetTag || v.lang.startsWith(lang));
+        if (exactVoice) {
+          utterance.voice = exactVoice;
+        } else {
+          const fallbackVoice = voices.find(v => v.lang.startsWith("hi") || v.lang.startsWith("en"));
+          if (fallbackVoice) utterance.voice = fallbackVoice;
+        }
+      }
+
+      utterance.onstart = () => {
+        voiceAdvisoryActive = true;
+        setBadgeState("playing");
+      };
+
+      utterance.onpause = () => {
+        setBadgeState("paused");
+      };
+
+      utterance.onresume = () => {
+        setBadgeState("playing");
+      };
+
+      utterance.onend = () => {
+        voiceAdvisoryActive = false;
+        setBadgeState("ready");
+      };
+
+      utterance.onerror = (e) => {
+        console.warn("Speech synthesis notice:", e);
+        voiceAdvisoryActive = false;
+        setBadgeState("ready");
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    if (playBtn) playBtn.addEventListener("click", playVoice);
+    if (pauseBtn) pauseBtn.addEventListener("click", () => {
+      if (window.speechSynthesis) window.speechSynthesis.pause();
+    });
+    if (resumeBtn) resumeBtn.addEventListener("click", () => {
+      if (window.speechSynthesis) window.speechSynthesis.resume();
+    });
+    if (stopBtn) stopBtn.addEventListener("click", stopVoice);
+
+    if (langSelect) {
+      langSelect.addEventListener("change", () => {
+        stopVoice();
+        updateVoiceTranscript();
+      });
+    }
+
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        // Voices loaded
+      };
+    }
+
+    updateVoiceTranscript();
+    setBadgeState("ready");
+  }
+
+  // Initialize Soil Report Modules on startup
+  initReportMap();
+  renderFieldSummary();
+  initVoiceAdvisory();
 
   // Multilingual Dictionaries (English, Hindi, Urdu RTL)
   const languages = {
@@ -1369,7 +1568,31 @@
       repEye: 'FIELD INTELLIGENCE REPORT',
       repTitle: 'From a map signal<br><em>to a field action.</em>',
       repSub: 'All values and zones below are illustrative to demonstrate precision agriculture workflow.',
-      repMapHead: 'North Plot — Zone Map',
+      repMapHead: 'Plot Location & Satellite Coordinates',
+      fieldSummaryTitle: 'Field Summary / खेत का सारांश',
+      sumSec1Title: 'Field Overview',
+      sumSec2Title: 'Observed Field Condition',
+      sumSec3Title: 'Recommended Next Steps',
+      sumSec4Title: 'Irrigation & Moisture Guidance',
+      sumSec5Title: 'Fertilizer & Soil Testing Guidance',
+      sumSec6Title: 'Pest & Disease Inspection',
+      sumSec7Title: 'When to Contact an Expert',
+      btnDownloadSummary: 'Download Summary Page ↓',
+      thermalCardTitle: 'Thermal & Vegetation Stress Map',
+      voiceCardTitle: 'Listen to Farmer Advice / किसान की सलाह सुनें',
+      voiceCardSub: 'Interactive Text-to-Speech Advisory · 23 Indian Languages',
+      voiceLangLabel: 'Voice Language:',
+      voicePlay: 'Listen',
+      voicePause: 'Pause',
+      voiceResume: 'Resume',
+      voiceStop: 'Stop',
+      voiceToggleOn: 'Voice ON',
+      voiceToggleOff: 'Voice OFF',
+      voiceListenAdv: 'Listen',
+      btnLiveLocation: 'Use Live Location',
+      btnSetCoords: 'Set',
+      fallbackTitle: 'Interactive Demo Fallback Map',
+      fallbackDesc: 'A valid Google Maps API key is required for live satellite imagery tiles. Click map or "Use Live Location" to interactively update coordinates.',
       statCrop: 'Crop',
       statStage: 'Crop stage',
       statStageVal: 'Tillering · sample',
@@ -1385,24 +1608,6 @@
       goHub: 'Explore natural fertilizer options ↗',
       btnDownloadReport: 'Download sample report ↓',
       btnAskAssistant: 'Ask Farmer Friend ↗',
-      summaryEyebrow: 'LIVE FIELD ADVISORY',
-      summaryTitle: 'Field Summary',
-      btnCopySummary: '📋 Copy Advisory Summary',
-      summaryDisclaimer: '*Illustrative demo advisory. Not a clinical laboratory report. Confirm with KVK / qualified agronomist before input application.',
-      tabSimSatellite: 'Simulated Satellite',
-      tabFarmLocation: 'Farm Location Map',
-      btnLiveLocation: 'Use Live Location',
-      lblLat: 'Lat:',
-      lblLng: 'Lng:',
-      btnUpdateCoords: 'Update ↵',
-      demoSatelliteBannerText: 'DEMO SATELLITE / SIMULATED FIELD DATA — NOT LIVE IMAGERY',
-      simMapLabel: 'SIMULATED THERMAL &amp; VEGETATION-STRESS OVERLAY',
-      legCoolMoist: 'Cooler / Higher Moisture',
-      legStableVigour: 'Stable Vigour',
-      legNutrientClue: 'Nutrient-Stress Clue',
-      legStressAnomaly: 'Thermal / Stress Anomaly',
-      gmapNotice: '<strong>Demo Map Mode:</strong> Click or drag the marker to adjust coordinates. To connect live Google Maps satellite tiles, configure <code>GOOGLE_MAPS_API_KEY</code> in <code>config.js</code>.',
-      btnShareSummary: '📋 Copy Advisory Summary',
       reportDisclaimerNote: '*Weather is illustrative demo content. No live satellite, weather, or soil-test API is connected.',
       aiEye: 'ASK IN SIMPLE LANGUAGE',
       aiTitle: 'Your <em>AI Farmer Friend.</em>',
@@ -1663,7 +1868,31 @@
       repEye: 'खेत व मिट्टी की रिपोर्ट',
       repTitle: 'नक्शे के संकेत से<br><em>खेत के कदम तक।</em>',
       repSub: 'नीचे दिए गए सभी मान और हिस्से प्रिसिजन एग्रीकल्चर समझाने के लिए उदाहरणात्मक हैं।',
-      repMapHead: 'उत्तरी खेत — ज़ोन नक्शा',
+      repMapHead: 'खेत का भू-स्थान एवं उपग्रह निर्देशांक',
+      fieldSummaryTitle: 'खेत का सारांश / Field Summary',
+      sumSec1Title: 'खेत का अवलोकन',
+      sumSec2Title: 'प्रेक्षित खेत की स्थिति',
+      sumSec3Title: 'अनुशंसित अगले कदम',
+      sumSec4Title: 'सिंचाई एवं नमी मार्गदर्शन',
+      sumSec5Title: 'उर्वरक एवं मिट्टी परीक्षण मार्गदर्शन',
+      sumSec6Title: 'कीट एवं रोग निरीक्षण',
+      sumSec7Title: 'कृषि विशेषज्ञ से कब संपर्क करें',
+      btnDownloadSummary: 'सारांश पृष्ठ डाउनलोड करें ↓',
+      thermalCardTitle: 'थर्मल एवं वनस्पति तनाव मानचित्र',
+      voiceCardTitle: 'किसान की सलाह सुनें / Listen to Advice',
+      voiceCardSub: 'इंटरैक्टिव वाक् सलाह · 23 भारतीय भाषाएं',
+      voiceLangLabel: 'आवाज़ की भाषा:',
+      voicePlay: 'सुनें',
+      voicePause: 'रोकें',
+      voiceResume: 'फिर सुनें',
+      voiceStop: 'बंद करें',
+      voiceToggleOn: 'आवाज़ चालू',
+      voiceToggleOff: 'आवाज़ बंद',
+      voiceListenAdv: 'सुनें',
+      btnLiveLocation: 'लाइव लोकेशन का उपयोग करें',
+      btnSetCoords: 'लागू करें',
+      fallbackTitle: 'इंटरैक्टिव डेमो फॉलबैक मैप',
+      fallbackDesc: 'लाइव सैटेलाइट टाइल्स के लिए वैध Google Maps API कुंजी आवश्यक है। निर्देशांक बदलने के लिए मैप पर क्लिक करें या "लाइव लोकेशन" चुनें।',
       statCrop: 'फसल',
       statStage: 'फसल अवस्था',
       statStageVal: 'कल्ले निकलना · नमूना',
@@ -1679,24 +1908,6 @@
       goHub: 'प्राकृतिक खाद के विकल्प देखें ↗',
       btnDownloadReport: 'नमूना रिपोर्ट डाउनलोड करें ↓',
       btnAskAssistant: 'किसान मित्र से पूछें ↗',
-      summaryEyebrow: 'सक्रिय खेत सलाह',
-      summaryTitle: 'खेत सारांश',
-      btnCopySummary: '📋 सलाह सारांश कॉपी करें',
-      summaryDisclaimer: '*डेमो सलाह केवल प्रदर्शन हेतु। प्रयोगशाला जांच नहीं। खाद डालने से पहले KVK / कृषि विशेषज्ञ से सलाह लें।',
-      tabSimSatellite: 'सिम्युलेटेड उपग्रह',
-      tabFarmLocation: 'खेत लोकेशन मैप',
-      btnLiveLocation: 'लाइव लोकेशन लें',
-      lblLat: 'अक्षांश:',
-      lblLng: 'देशांतर:',
-      btnUpdateCoords: 'अपडेट करें ↵',
-      demoSatelliteBannerText: 'डेमो उपग्रह / सिम्युलेटेड खेत डेटा — लाइव इमेजरी नहीं',
-      simMapLabel: 'सिम्युलेटेड थर्मल एवं फसल-तनाव ओवरले',
-      legCoolMoist: 'अधिक नमी / ठंडा',
-      legStableVigour: 'स्थिर फसल ताकत',
-      legNutrientClue: 'पोषक-तनाव संकेत',
-      legStressAnomaly: 'थर्मल / फसल तनाव',
-      gmapNotice: '<strong>डेमो मैप मोड:</strong> मार्कर को क्लिक या ड्रैग करके लोकेशन बदलें। लाइव गूगल मैप्स के लिए <code>config.js</code> में <code>GOOGLE_MAPS_API_KEY</code> सेट करें।',
-      btnShareSummary: '📋 सलाह सारांश कॉपी करें',
       reportDisclaimerNote: '*मौसम उदाहरणात्मक सामग्री है। कोई लाइव API कनेक्ट नहीं है।',
       aiEye: 'सरल भाषा में पूछें',
       aiTitle: 'आपका <em>AI किसान मित्र।</em>',
@@ -1957,7 +2168,31 @@
       repEye: 'فیلڈ و سوائل رپورٹ',
       repTitle: 'نقشے کے اشارے سے<br><em>کھیت کے عمل تک۔</em>',
       repSub: 'تمام اقدار اور حصے پریسیژن ایگریکلچر کا طریقۂ کار دکھانے کے لیے مثالی ہیں۔',
-      repMapHead: 'شمالی پلاٹ — زون نقشہ',
+      repMapHead: 'کھیت کا مقام اور سیٹلائٹ نقاط',
+      fieldSummaryTitle: 'کھیت کا خلاصہ / Field Summary',
+      sumSec1Title: 'کھیت کا جائزہ',
+      sumSec2Title: 'مشاہدہ شدہ حالت',
+      sumSec3Title: 'تجویز کردہ اگلے اقدامات',
+      sumSec4Title: 'آبپاشی اور نمی کی رہنمائی',
+      sumSec5Title: 'کھاد اور مٹی کے ٹیسٹ کی رہنمائی',
+      sumSec6Title: 'کیڑوں اور بیماریوں کا معائنہ',
+      sumSec7Title: 'زرعی ماہر سے کب رابطہ کریں',
+      btnDownloadSummary: 'خلاصہ رپورٹ ڈاؤن لوڈ کریں ↓',
+      thermalCardTitle: 'تھرمل اور پودوں کے تناؤ کا نقشہ',
+      voiceCardTitle: 'کسان مشورہ سنیں / Voice Advisory',
+      voiceCardSub: 'آواز میں رہنمائی · 23 ہندوستانی زبانیں',
+      voiceLangLabel: 'آواز کی زبان:',
+      voicePlay: 'سنیں',
+      voicePause: 'وقفہ',
+      voiceResume: 'دوبارہ سنیں',
+      voiceStop: 'بند کریں',
+      voiceToggleOn: 'آواز آن',
+      voiceToggleOff: 'آواز آف',
+      voiceListenAdv: 'سنیں',
+      btnLiveLocation: 'لائیو لوکیشن استعمال کریں',
+      btnSetCoords: 'سیٹ کریں',
+      fallbackTitle: 'انٹرایکٹو ڈیمو فال بیک نقشہ',
+      fallbackDesc: 'براہ راست سیٹلائٹ تصویر کے لیے درست Google Maps API کلید درکار ہے۔ نقشے پر کلک کر کے یا لائیو لوکیشن سے متوازی نقاط تبدیل کریں۔',
       statCrop: 'فصل',
       statStage: 'فصل کا مرحلہ',
       statStageVal: 'پھوٹ نکلنا · نمونہ',
@@ -1973,24 +2208,6 @@
       goHub: 'قدرتی کھاد کے اختیارات دیکھیں ↗',
       btnDownloadReport: 'نمونہ رپورٹ ڈاؤن لوڈ کریں ↓',
       btnAskAssistant: 'کسان دوست سے پوچھیں ↗',
-      summaryEyebrow: 'لائیو زرعی ایڈوائزری',
-      summaryTitle: 'فیلڈ کا خلاصہ',
-      btnCopySummary: '📋 ایڈوائزری خلاصہ کاپی کریں',
-      summaryDisclaimer: '*ڈیمو مشورہ صرف نمائش کے لیے ہے۔ لیبارٹری رپورٹ نہیں۔ کھاد ڈالنے سے پہلے KVK / زرعی ماہر سے تصدیق کریں۔',
-      tabSimSatellite: 'مصنوعی سیٹلائٹ',
-      tabFarmLocation: 'فارم لوکیشن نقشہ',
-      btnLiveLocation: 'لائیو لوکیشن لیں',
-      lblLat: 'عرض:',
-      lblLng: 'طول:',
-      btnUpdateCoords: 'اپ ڈیٹ کریں ↵',
-      demoSatelliteBannerText: 'ڈیمو سیٹلائٹ / فیلڈ ڈیٹا — لائیو تصویر نہیں',
-      simMapLabel: 'مصنوعی تھرمل اور فصل کا دباؤ',
-      legCoolMoist: 'ٹھنڈا / زیادہ نمی',
-      legStableVigour: 'مستحکم قوت',
-      legNutrientClue: 'غذائی دباؤ کا اشارہ',
-      legStressAnomaly: 'تھرمل / فصلی دباؤ',
-      gmapNotice: '<strong>ڈیمو میپ موڈ:</strong> مارکر کو کلک یا ڈریگ کر کے لوکیشن تبدیل کریں۔ لائیو گوگل میپس کے لیے <code>config.js</code> میں <code>GOOGLE_MAPS_API_KEY</code> سیٹ کریں۔',
-      btnShareSummary: '📋 ایڈوائزری خلاصہ کاپی کریں',
       reportDisclaimerNote: '*موسم مثالی مواد ہے۔ کوئی لائیو API منسلک نہیں۔',
       aiEye: 'آسان زبان میں پوچھیں',
       aiTitle: 'آپ کا <em>AI کسان دوست۔</em>',
@@ -2126,6 +2343,7 @@
   };
 
   let currentLang = "en";
+  let isBotVoiceAuto = true;
   let soilState = "result"; // default demo state starts validated so all prototype features are accessible
 
   function renderSoil() {
@@ -2169,16 +2387,15 @@
 
   function setLanguage(code) {
     currentLang = languages[code] ? code : "en";
-    const dict = languages[currentLang] || languages.en;
-    const meta = languageMetadata[code] || { dir: (code === "ur" || code === "ks" || code === "sd") ? "rtl" : "ltr", name: code, native: code };
+    const dict = languages[currentLang];
 
     document.documentElement.lang = currentLang;
-    document.documentElement.dir = meta.dir;
+    document.documentElement.dir = currentLang === "ur" ? "rtl" : "ltr";
 
     // Update all data-i18n elements
     $$("[data-i18n]").forEach(el => {
       const key = el.dataset.i18n;
-      if (dict && dict[key]) {
+      if (dict[key]) {
         el.innerHTML = dict[key];
       } else if (languages.en[key]) {
         el.innerHTML = languages.en[key];
@@ -2186,17 +2403,27 @@
     });
 
     // Update dynamic text
+    const voicePicker = $("#voiceLangSelect");
+    if (voicePicker) {
+      voicePicker.value = code;
+    }
     renderSoil();
     updateZone(currentZone);
-
-    // Refresh field summary for selected language (Requirement 2 & 4)
-    if (typeof renderFieldSummary === "function") {
-      renderFieldSummary(code);
-    }
 
     // Update chatbot greeting
     if ($("#chatGreeting") && dict.chatGreeting) {
       $("#chatGreeting").textContent = dict.chatGreeting;
+    }
+
+    // Update bot voice toggle label according to active state
+    const voiceToggleBtn = $("#botVoiceToggle");
+    if (voiceToggleBtn) {
+      const label = voiceToggleBtn.querySelector(".voice-toggle-label");
+      if (label) {
+        label.textContent = isBotVoiceAuto
+          ? (dict.voiceToggleOn || "Voice ON")
+          : (dict.voiceToggleOff || "Voice OFF");
+      }
     }
 
     // Notify user
@@ -2207,8 +2434,8 @@
     } else if (code === "en") {
       notify("Language switched to English.");
     } else {
-      const selectedName = languageSelect.options[languageSelect.selectedIndex]?.text || meta.name;
-      notify(`Language: ${selectedName}. Regional advisory loaded with verified agricultural terminology.`);
+      const selectedName = languageSelect.options[languageSelect.selectedIndex]?.text || code;
+      notify(`Language: ${selectedName}. Demonstrating with English fallback; regional localization model ready.`);
     }
   }
 
@@ -2301,6 +2528,83 @@
     return "A sensible first step is to scout the flagged zone, compare affected plants with healthy neighbouring areas, and verify root-depth moisture. For nutrient decisions, always rely on certified laboratory soil testing and local agronomic expertise. This demo provides guidance, not a diagnosis.";
   }
 
+  // Voice on the Adviser: Text-to-Speech & Speech-to-Text
+  let activeAdvisorUtterance = null;
+  let activeSpeakBtn = null;
+
+  function speakAdvisorText(text, btnElement) {
+    if (!window.speechSynthesis) {
+      notify("Text-to-speech is not supported by your browser.");
+      return;
+    }
+
+    // Toggle off if currently speaking from this button
+    if (window.speechSynthesis.speaking && activeSpeakBtn === btnElement) {
+      window.speechSynthesis.cancel();
+      if (activeSpeakBtn) {
+        activeSpeakBtn.classList.remove("speaking");
+        const label = activeSpeakBtn.querySelector(".speak-label") || activeSpeakBtn.querySelector("span:last-child");
+        if (label) label.textContent = currentLang === "hi" ? "सुनें" : currentLang === "ur" ? "سنیں" : "Listen";
+      }
+      activeSpeakBtn = null;
+      return;
+    }
+
+    // Cancel any running utterance
+    window.speechSynthesis.cancel();
+    if (activeSpeakBtn) {
+      activeSpeakBtn.classList.remove("speaking");
+      const label = activeSpeakBtn.querySelector(".speak-label") || activeSpeakBtn.querySelector("span:last-child");
+      if (label) label.textContent = currentLang === "hi" ? "सुनें" : currentLang === "ur" ? "سنیں" : "Listen";
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    activeAdvisorUtterance = utterance;
+    activeSpeakBtn = btnElement;
+
+    const targetTag = voiceLangCodes[currentLang] || "hi-IN";
+    utterance.lang = targetTag;
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length) {
+      const exactVoice = voices.find(v => v.lang === targetTag || v.lang.startsWith(currentLang));
+      if (exactVoice) {
+        utterance.voice = exactVoice;
+      } else {
+        const fallbackVoice = voices.find(v => v.lang.startsWith("hi") || v.lang.startsWith("en"));
+        if (fallbackVoice) utterance.voice = fallbackVoice;
+      }
+    }
+
+    if (btnElement) {
+      btnElement.classList.add("speaking");
+      const label = btnElement.querySelector(".speak-label") || btnElement.querySelector("span:last-child");
+      if (label) label.textContent = currentLang === "hi" ? "रुकें" : currentLang === "ur" ? "روکیں" : "Stop";
+    }
+
+    utterance.onend = () => {
+      if (btnElement) {
+        btnElement.classList.remove("speaking");
+        const label = btnElement.querySelector(".speak-label") || btnElement.querySelector("span:last-child");
+        if (label) label.textContent = currentLang === "hi" ? "सुनें" : currentLang === "ur" ? "سنیں" : "Listen";
+      }
+      if (activeSpeakBtn === btnElement) activeSpeakBtn = null;
+    };
+
+    utterance.onerror = () => {
+      if (btnElement) {
+        btnElement.classList.remove("speaking");
+        const label = btnElement.querySelector(".speak-label") || btnElement.querySelector("span:last-child");
+        if (label) label.textContent = currentLang === "hi" ? "सुनें" : currentLang === "ur" ? "سنیں" : "Listen";
+      }
+      if (activeSpeakBtn === btnElement) activeSpeakBtn = null;
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
   function addChatMessage(text, sender) {
     const chatContainer = $("#chatMessages");
     if (!chatContainer) return;
@@ -2320,14 +2624,36 @@
 
     const p = document.createElement("p");
     p.textContent = text;
+    bubble.appendChild(p);
 
     const time = document.createElement("small");
     time.textContent = `${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · DEMO`;
 
-    bubble.appendChild(p);
-    bubble.appendChild(time);
-    wrap.appendChild(bubble);
+    if (sender !== "user") {
+      const foot = document.createElement("div");
+      foot.className = "bubble-foot";
+      foot.appendChild(time);
 
+      const speakBtn = document.createElement("button");
+      speakBtn.type = "button";
+      speakBtn.className = "bubble-speak-btn";
+      speakBtn.innerHTML = `<span>🔊</span> <span class="speak-label">${currentLang === "hi" ? "सुनें" : currentLang === "ur" ? "سنیں" : "Listen"}</span>`;
+      speakBtn.title = "Listen to advice";
+      speakBtn.addEventListener("click", () => {
+        speakAdvisorText(text, speakBtn);
+      });
+      foot.appendChild(speakBtn);
+      bubble.appendChild(foot);
+
+      // Auto-speak reply if enabled
+      if (isBotVoiceAuto) {
+        speakAdvisorText(text, speakBtn);
+      }
+    } else {
+      bubble.appendChild(time);
+    }
+
+    wrap.appendChild(bubble);
     chatContainer.appendChild(wrap);
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
@@ -2353,6 +2679,119 @@
     });
   }
 
+  // Voice Input via Microphone (Web Speech Recognition)
+  const chatMicBtn = $("#chatMicBtn");
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognitionInstance = null;
+  let isListening = false;
+
+  if (chatMicBtn) {
+    if (SpeechRecognition) {
+      try {
+        recognitionInstance = new SpeechRecognition();
+        recognitionInstance.continuous = false;
+        recognitionInstance.interimResults = false;
+
+        recognitionInstance.onstart = () => {
+          isListening = true;
+          chatMicBtn.classList.add("listening");
+          const input = $("#chatInput");
+          if (input) input.placeholder = currentLang === "hi" ? "सुन रहे हैं... बोलिए 🎙️" : currentLang === "ur" ? "سن رہے ہیں... بولیے 🎙️" : "Listening... speak now 🎙️";
+          notify("Microphone active. Speak your question to the advisor.");
+        };
+
+        recognitionInstance.onresult = event => {
+          const transcript = event.results[0][0].transcript;
+          const input = $("#chatInput");
+          if (input) {
+            input.value = transcript;
+            handleUserQuestion(transcript);
+            input.value = "";
+          }
+        };
+
+        recognitionInstance.onerror = event => {
+          console.warn("Speech recognition error:", event.error);
+          notify(event.error === "not-allowed" ? "Microphone permission denied." : "Speech recognition: " + (event.error || "Could not hear audio"));
+          resetMicState();
+        };
+
+        recognitionInstance.onend = () => {
+          resetMicState();
+        };
+
+        function resetMicState() {
+          isListening = false;
+          chatMicBtn.classList.remove("listening");
+          const input = $("#chatInput");
+          if (input) input.placeholder = "Ask about your field (e.g. Zone C, soil test, watering)...";
+        }
+
+        chatMicBtn.addEventListener("click", () => {
+          if (isListening) {
+            recognitionInstance.stop();
+          } else {
+            try {
+              recognitionInstance.lang = voiceLangCodes[currentLang] || "hi-IN";
+              recognitionInstance.start();
+            } catch (e) {
+              console.warn("Recognition start failed:", e);
+            }
+          }
+        });
+      } catch (err) {
+        console.warn("Could not instantiate SpeechRecognition:", err);
+      }
+    } else {
+      chatMicBtn.addEventListener("click", () => {
+        notify("Speech recognition is not supported in this browser. Please type your query in the box.");
+      });
+    }
+  }
+
+  // Auto-Voice Toggle in Chat Header
+  const botVoiceToggle = $("#botVoiceToggle");
+  if (botVoiceToggle) {
+    botVoiceToggle.addEventListener("click", () => {
+      isBotVoiceAuto = !isBotVoiceAuto;
+      botVoiceToggle.classList.toggle("off", !isBotVoiceAuto);
+      botVoiceToggle.setAttribute("aria-pressed", String(isBotVoiceAuto));
+      const icon = botVoiceToggle.querySelector(".voice-toggle-icon");
+      const label = botVoiceToggle.querySelector(".voice-toggle-label");
+      if (icon) icon.textContent = isBotVoiceAuto ? "🔊" : "🔈";
+      if (label) {
+        if (currentLang === "hi") {
+          label.textContent = isBotVoiceAuto ? "आवाज़ चालू" : "आवाज़ बंद";
+        } else if (currentLang === "ur") {
+          label.textContent = isBotVoiceAuto ? "آواز آن" : "آواز آف";
+        } else {
+          label.textContent = isBotVoiceAuto ? "Voice ON" : "Voice OFF";
+        }
+      }
+      notify(`Advisor voice is now ${isBotVoiceAuto ? "ENABLED (Auto-readout on)" : "MUTED"}.`);
+    });
+  }
+
+  // Initial Greeting Speak Button
+  const initialGreetingBtn = $("#initialGreetingSpeakBtn");
+  if (initialGreetingBtn) {
+    initialGreetingBtn.addEventListener("click", () => {
+      const text = $("#chatGreeting") ? $("#chatGreeting").textContent : "Namaste! I am your demo Farmer Friend.";
+      speakAdvisorText(text, initialGreetingBtn);
+    });
+  }
+
+  // Soil Validation Advisory Speak Button
+  const speakSoilAdvisoryBtn = $("#speakSoilAdvisoryBtn");
+  if (speakSoilAdvisoryBtn) {
+    speakSoilAdvisoryBtn.addEventListener("click", () => {
+      const advText = $("#advisoryText") ? $("#advisoryText").textContent : "";
+      if (advText) {
+        speakAdvisorText(advText, speakSoilAdvisoryBtn);
+      }
+    });
+  }
+
   $$(".suggested-questions button").forEach(btn => {
     btn.addEventListener("click", () => {
       handleUserQuestion(btn.dataset.question || btn.textContent);
@@ -2363,6 +2802,7 @@
     $("#clearChat").addEventListener("click", () => {
       const chatContainer = $("#chatMessages");
       if (chatContainer) {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
         chatContainer.innerHTML = `<div class="chat-date">${currentLang === "hi" ? "आज · डेमो सत्र" : currentLang === "ur" ? "آج · ڈیمو سیشن" : "TODAY · DEMO SESSION"}</div>`;
         const initialGreeting = (languages[currentLang] || languages.en).chatGreeting;
         addChatMessage(initialGreeting, "bot");
@@ -2480,8 +2920,6 @@
   // Initialize Default State
   updateZone("C");
   renderSoil();
-  initFarmMap();
-  renderFieldSummary(currentLang);
 
   // Public Architecture Interface (Ready for live Supabase, Maps, Weather, and AI APIs)
   window.KrishiVed = {
@@ -2491,8 +2929,6 @@
     getZoneData: () => ({ ...zoneData }),
     getCurrentZone: () => currentZone,
     setZone: updateZone,
-    renderSummary: (l) => renderFieldSummary(l),
-    initMap: () => initFarmMap(),
     setSoilStatus: (s) => { soilState = s; renderSoil(); },
     adapters: {
       auth: null,        // Supabase GoTrue client
